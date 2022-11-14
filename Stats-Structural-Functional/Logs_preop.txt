@@ -1,0 +1,109 @@
+sub-CON10 in ses-preop DMN BOLD signal done
+sub-CON07 in ses-preop DMN BOLD signal done
+sub-CON03 in ses-preop DMN BOLD signal done
+sub-CON09 in ses-preop DMN BOLD signal done
+sub-CON08 in ses-preop DMN BOLD signal done
+sub-CON06 in ses-preop DMN BOLD signal done
+sub-CON11 in ses-preop DMN BOLD signal done
+sub-CON02 in ses-preop DMN BOLD signal done
+sub-CON04 in ses-preop DMN BOLD signal done
+sub-CON05 in ses-preop DMN BOLD signal done
+sub-CON01 in ses-preop DMN BOLD signal done
+=================================
+sub-PAT01 in ses-preop DMN BOLD signal done
+sub-PAT01 in ses-preop Oedema signal done
+=================================
+sub-PAT13 in ses-preop DMN BOLD signal done
+sub-PAT13 in ses-preop Oedema signal done
+=================================
+sub-PAT06 in ses-preop DMN BOLD signal done
+sub-PAT06 in ses-preop Oedema signal done
+=================================
+sub-PAT11 in ses-preop DMN BOLD signal done
+sub-PAT11 in ses-preop Oedema signal done
+=================================
+sub-PAT07 in ses-preop DMN BOLD signal done
+sub-PAT07 in ses-preop Oedema signal done
+=================================
+sub-PAT26 in ses-preop DMN BOLD signal done
+sub-PAT26 in ses-preop Oedema signal done
+=================================
+sub-PAT20 in ses-preop DMN BOLD signal done
+sub-PAT20 in ses-preop Oedema signal done
+=================================
+sub-PAT15 in ses-preop DMN BOLD signal done
+sub-PAT15 in ses-preop Oedema signal done
+=================================
+sub-PAT08 in ses-preop DMN BOLD signal done
+sub-PAT08 in ses-preop Oedema signal done
+=================================
+sub-PAT25 in ses-preop DMN BOLD signal done
+sub-PAT25 in ses-preop Oedema signal done
+=================================
+sub-PAT23 in ses-preop DMN BOLD signal done
+sub-PAT23 in ses-preop Oedema signal done
+=================================
+sub-PAT10 in ses-preop DMN BOLD signal done
+sub-PAT10 in ses-preop Oedema signal done
+=================================
+sub-PAT24 in ses-preop DMN BOLD signal done
+sub-PAT24 in ses-preop Oedema signal done
+=================================
+sub-PAT17 in ses-preop DMN BOLD signal done
+sub-PAT17 in ses-preop Oedema signal done
+=================================
+sub-PAT16 in ses-preop DMN BOLD signal done
+sub-PAT16 in ses-preop Oedema signal done
+=================================
+sub-PAT05 in ses-preop DMN BOLD signal done
+sub-PAT05 in ses-preop Oedema signal done
+=================================
+sub-PAT03 in ses-preop DMN BOLD signal done
+sub-PAT03 in ses-preop Oedema signal done
+=================================
+sub-PAT28 in ses-preop DMN BOLD signal done
+sub-PAT28 in ses-preop Oedema signal done
+=================================
+sub-PAT02 in ses-preop DMN BOLD signal done
+sub-PAT02 in ses-preop Oedema signal done
+=================================
+sub-PAT22 in ses-preop DMN BOLD signal done
+sub-PAT22 in ses-preop Oedema signal done
+=================================
+sub-PAT14 in ses-preop DMN BOLD signal done
+sub-PAT14 in ses-preop Oedema signal done
+=================================
+sub-PAT29 in ses-preop DMN BOLD signal done
+sub-PAT29 in ses-preop Oedema signal done
+=================================
+sub-PAT19 in ses-preop DMN BOLD signal done
+sub-PAT19 in ses-preop Oedema signal done
+=================================
+sub-PAT27 in ses-preop DMN BOLD signal done
+sub-PAT27 in ses-preop Oedema signal done
+=================================
+sub-PAT31 in ses-preop DMN BOLD signal done
+sub-PAT31 in ses-preop Oedema signal done
+=================================
+Subject with Higher DMN DAS: sub-PAT07; DMN DAS=40.857448164345854
+Subject with Lower DMN DAS: sub-PAT19; DMN DAS=-26.87088048394676
+Richness change with pT=0.06657061571144755
+Absolut Richness change with pT=6.885503338605976e-05
+Correlation DAS with Power DMN: r=-0.1624515471589486 with p-value=0.4378386474581821
+Correlation DAS with Power Oedema: r=-0.034344920263483285 with p-value=0.8705337042069773
+=================================
+Power change: p=0.18229723865785127
+Abs Power change: p=0.03189043332900007
+DAS change: p=0.8282306931098653
+ABS DAS change: p=9.308982119777804e-07
+K-means score: -1.2733862867853791
+DAS with type: r=0.010968896058947474 and p-val=0.9584983912815263
+DAS with size: r=0.26277670238558076 and p-val=0.20441912072262966
+DAS with ventricular: r=0.291063831683561 and p-val=0.1580703218785062
+DAS with location: r=-0.04342183573521331 and p-val=0.8367199796630155
+DAS with grade: r=-0.07381419075675205 and p-val=0.725847343217227
+Type (2s): pT=0.9586092612706675 and pU=0.7633406080536744
+Size (1s): pT=0.2932272272425229 and pU=0.48848512766098784
+Ventricular (1s): pT=0.13838682330185548 and pU=0.167777150385846
+Location (2s): pT=0.851377931692238 and pU=0.5150082114768838
+Grade (2s): pT=0.7260684104168851 and pU=0.4302896916456853
