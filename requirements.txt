@@ -1,0 +1,16 @@
+### Create a conda environment with python version 3.10.4 ###
+numpy==1.22.0
+scipy
+sklearn
+pandas
+pyyaml
+seaborn
+wandb
+tqdm
+networkx
+brainspace 
+
+### Then run the following command ###
+# conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+### or if you don't have cuda ###
+# conda install pytorch torchvision torchaudio -c pytorch
