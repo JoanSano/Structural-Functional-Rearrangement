@@ -1,0 +1,32 @@
+===
+When registering the diffusion images to MNI space, one should also correct the B-bevcs or no? 
+I mean rotate the bvecs (as it is done after motion correction). 
+I think it is reasonable, but I have failed to find any confirmation of this step. 
+Thanks.
+===
+Yes, any registration of DWI images should be accompanied by rotating B-vecs.
+===
+I think so too, but discussing this with a colleague he mentioned an interesting point, 
+which is that after a rotation, the angles of the bvecs with respect to the system’s 
+axes havent changed so the bvecs coordinates should remain the same. 
+I am not entirely sure about this argument but he made me doubt. 
+Is there a reference or paper to cite when doing this preprocessing step? 
+It is true that a most of the works register the atlas to the diffusion space, 
+but there should be also the other case. 
+I guess we are just looking for a confirmation on this matter. 
+Once again, thanks again for the prompt answer.
+===
+The important thing is that the bvecs orientation has changed relative to the brain’s axes. 
+o illustrate this point, consider an extreme rotation that rotates the brain 90 degrees
+(such that the x-axis becomes y-axis). Let’s say that originally (pre-rotation), 
+the gradient was pointed in the pure +X direction, and this image indicated a high degree 
+of diffusivity in a particular voxel. If the brain is now rotated, and the gradient not rotated, 
+that volume would still indicate a high diffusivity in the X direction relative to the scanner, 
+but in the brain it would appear the diffusivity is now going in the Y direction, 
+which can completely confound tract tracing efforts. If your goal is only to produce scalar maps 
+(e.g. FA, MD), then maybe you do not need to rotate, but if you need directionality for any purpose,
+then you will need to account for this rotation in your gradients. I do not have a citation off the 
+top of my head that supports this, but it is part of tract segmentation workflows such as TractSeg.
+Best,
+Steven
+===

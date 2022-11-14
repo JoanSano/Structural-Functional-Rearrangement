@@ -1,0 +1,27 @@
+############################################################################
+## This is a footnote on the brain extraction step when dealing with dMRI ##
+############################################################################
+
+As a start, if you have an anatomical image, you should immediately use the 
+FSL BET2 command, since DIPY's median_otsu function is completely useless.
+
+When dealing with diffusion data, the choice can be more complicated. Ultimately,
+what determines the use of some utility is it's result so you might want to 
+try both approaches and then choose whichever is better. However, from 
+personal experience I can tell you that if you have high b-value data the
+median_otsu will struggle. This is possibly because the decay in the intensity
+of the signal causes median_otsu to treat brain tissue as sorroundings. This 
+translates to a very smooth brain mask which although similar to the real 
+misses brain tissue. In the worst scenario, median_otsu introduces wholes 
+inside the brain when cutting to much of the brain stem. If this happens,
+consider switching to FSL BET2 to eextract a binary mask and then apply that 
+mask with fslmaths -mas to all the volumes of the original image. Of course you 
+woud need to find the appropiate values for the parameters.
+
+Alternatively, median_otsu has been proven to work very well for low b-value
+data (e.g., b=1000) apprximately keeping all the brain tissue without even 
+smoothing the resulting mask. As a final note on the median_otsu parameters,
+since they are not really explained in the DIPY Docs, it has three parameters:
+numpass, mediaradius and dilate. The higher these values, the less aggressive 
+is the mask. However please note that even if the masking is not aggressive, 
+all the problems mentioned here could (and most probably will) still prevail.

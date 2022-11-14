@@ -1,0 +1,69 @@
+data:
+  ## Cla ##
+  input_path: "/home/bam/Joan/Stroke_WUSM/"
+  output_path: "/home/bam/Joan/Stroke_WUSM/"
+  #input_path: "/home/bam/Joan/Glioma_Gent_AAL3_CoRegis/"
+  #output_path: "/home/bam/Joan/Glioma_Gent_AAL3_CoRegis/"
+  
+  ## Thinkpad ##
+  #input_path: "/home/joan/Documents/Stroke_WUSM/"
+  #output_path: "/home/joan/Documents/Stroke_WUSM_Trial/"
+  #input_path: "/home/joan/Documents/Glioma_Gent/"
+  #output_path: "/home/joan/Documents/Glioma_Gent_Trial/"
+
+  # Skip already available files
+  skip: True  
+  # PreProcess backup sessions
+  backup: True 
+  # Keep intermediate files
+  keep_intermediate: False 
+  # Whether unprocessed files are gunzipped or not
+  gzip: True
+  # Report errors in .txt file
+  logs: True
+
+## Main Acquisition Directions ##
+main_acqs: ["acq-AP", "acq-LR"] # ["AP", "RL", ...] Automatically searches for REVERSED phase econding
+merge_acqs: False # Merge acquisitions in one file and preprocess together
+
+## Use eddy_cuda: Be sure that your os supports it. 
+#    Type the command find $FSLDIR -name '*eddy_cuda*' to verfiy what FSL supports. Then nvidia-smi to verify that your GPU supports it. 
+#    You can also refer to https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide otherwise and/or https://www.nemotos.net/?p=3701
+eddy: 
+  cuda: True
+  version: 10.2
+
+## Voxel size ##
+vox_size: 
+  dwi: 1.5
+  anat: 1
+
+## Atlas ##
+atlas:
+  ## Cla ##
+  REF: "/home/bam/Joan/Utils/AAL3/MNI_Ref_volumes/MNI152lin_T1_1mm_brain.nii.gz"
+  labels: "/home/bam/Joan/Utils/AAL3/AAL3v1.nii.gz"
+
+  ## Thinkpad ##
+  #REF: "/home/joan/Documents/Utils/AAL3/MNI_Ref_volumes/MNI152lin_T1_2mm_brain.nii.gz"
+  #labels: "/home/joan/Documents/Utils/AAL3/AAL3v1.nii.gz"
+
+## Type of file processing ##
+process:
+  type: "multi" # "multi" vs "single"
+  threads: 5
+
+# Subject to process
+subjects: 
+  # Folders to process
+  folders: "sub-*" 
+  # Sessions
+  sessions: "*" # set to * for all, or specify ["acute, followup, followup-2"] ["control", "control-2"] ["ses-preop", "ses-postop"]
+  # MRI images
+  mris: ["dwi"] # If more than one mri, all will be preprocessed (might be incompatible with your registration choice)
+
+## Reference image to register to (as of now I recommend T1 to atlas and dwi to T1 afterwards)
+reference: "anat" # "anat" or "atlas"
+
+## Method to extract brain tissue for dMRI - Read the NotesOnBet4Dwi.txt for information
+dwi_be: "bet2" # Choose between "bet2" and "median_otsu" 
