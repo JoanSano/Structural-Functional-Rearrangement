@@ -7,6 +7,6 @@ If you use this code or data please consider citing:
 
   [1] BioRxiv
   
-  [2] Falco-Roget, Joan. “Structural Rearrangement Functional Desynchornization.” OSF, 13 Nov. 2022. Web.
+  [2] Falco-Roget, J. (2022, November 14). Structural Rearrangement Functional Desynchornization. Retrieved from osf.io/48fnm
   
   ![Fig1](https://user-images.githubusercontent.com/95430406/201612773-931529bc-391c-49a0-b95b-2ce6f7fe376f.jpg)
