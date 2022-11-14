@@ -1,0 +1,55 @@
+### RELEVANT PATHS TO CREATE THE CONNECTOME ###
+paths:  
+  #dataset_dir: "/home/hippo/Joan/Glioma_Gent_AAL3_CoRegis/"
+  dataset_dir: "/home/hippo/Joan/Stroke_WUSM/"
+  atlas_path: "/home/hippo/Joan/Utils/AAL3/AAL3v1_1mm.nii.gz"
+
+  output_dir: "/home/hippo/Joan/" # If null, then output is in the 'dataset_dir'
+
+  session: "*" # opts: "preop", "psotop" // "*" means all sessions available
+  subject: "*" #"sub-PAT16"      # "*" means all subjects available
+  skip_subjects: "sub-CON29,sub-PAT138,sub-PAT102"  # List of subjects to skip
+
+### SPACE TO WHICH IS REGISTERED ###
+space: "MNI" # opts: "MNI", "dwi", "anat" 
+
+### fODF RECONSTRUCTION METHOD TO USE ###
+# TODO: Implement various options for reconstruction and tractography
+recons: "SS3T-CSD" # opts: "MSMT-CSD", "SS3T-CSD", "hybrid"// if null: uses MSMT_CSD 
+shell: "1000" # Only used for single shell methods
+
+### TRACTOGRAPHY OPTIONS ###
+trac:
+  method: ACT # [ACT, Null] # Not applied when hybrid
+  cutoff: "0.08" # FOD amplitude threshold - Only used inside the patological volume of the 5TT image (5th volume)
+  seeding: "dynamic" # "gwmwi" / "random" / "dynamic"
+  streams: "4000000"
+  filtered: "30" # Percentage Number of streams to be kept -- Difficult to assert the value and the utility of this number
+  seed_num: "10000000"
+  max_len: "280"   
+  min_len: "3" # Default value for ACT is "2"
+  save_trk: False
+  keep_full_tck: False
+
+### Type of lesion ###
+lesion: " " # This corresponds to the name of the binary mask of the lesion
+
+### DELETE INTERMEDIATE FILEs ###
+delete: 
+  response_funcs: True
+  fODFs: True
+  WM_fODF: False
+  seeding_mask: True
+  bias_corr: True
+  seg_5tt: False
+  single_shells: True # Only applies to Single Shell extraction methods
+  lesion_1mm: True
+
+### PROCESSING TYPE ###
+process: "multi" # [multi, single] processing of subjects
+
+### NUMBER OF THREADS TO launch ###
+threads: "2"
+
+### SKIP EXISTING FILES ###
+skip: True
