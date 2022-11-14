@@ -1,7 +1,7 @@
 # Structural-Functional-Rearrangement
 Repository for the data and codes used in the study of structural and functional networks in brain tumors and surgery. 
 
-Research conducted by Joan Falcó-Roget, Fabio Sambataro, Alberto Cacciola and Alessandro Crimi.
+Research conducted by Joan Falcó-Roget, Fabio Sambataro, Alberto Cacciola and Alessandro Crimi [1]. 
 
 If you use this code, please consider citing:
 
