@@ -1,0 +1,40 @@
+FCNET:
+% of negative connections below 0:
+sub-PAT03: 26.54983570646221 %
+sub-PAT15: 27.440671778021176 %
+sub-PAT28: 26.78349762687112 %
+% of negative connections below -0.5:
+sub-PAT03: 0.0 %
+sub-PAT15: 0.0 %
+sub-PAT28: 0.0 %
+% of negative connections below -1:
+sub-PAT03: 0.0 %
+sub-PAT15: 0.0 %
+sub-PAT28: 0.0 %
+============================================
+HUBER:
+% of negative connections below 0:
+sub-PAT03: 24.826579043446515 %
+sub-PAT15: 23.950346841913106 %
+sub-PAT28: 22.811244979919678 %
+% of negative connections below -0.5:
+sub-PAT03: 0.07301935012778386 %
+sub-PAT15: 0.058415480102227094 %
+sub-PAT28: 0.029207740051113547 %
+% of negative connections below -1:
+sub-PAT03: 0.0 %
+sub-PAT15: 0.0 %
+sub-PAT28: 0.0 %
+NULL:
+% of negative connections below 0:
+sub-PAT03: 85.54947060971158 %
+sub-PAT15: 85.03833515881709 %
+sub-PAT28: 84.5271997079226 %
+% of negative connections below -0.5:
+sub-PAT03: 35.38517707192406 %
+sub-PAT15: 36.67031763417305 %
+sub-PAT28: 36.94779116465863 %
+% of negative connections below -1:
+sub-PAT03: 17.042716319824752 %
+sub-PAT15: 17.656078860898138 %
+sub-PAT28: 18.0065717415115 %
