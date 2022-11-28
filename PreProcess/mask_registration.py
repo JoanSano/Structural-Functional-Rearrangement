@@ -49,26 +49,34 @@ def register_lesion_mask_Stroke(mask, config):
     ref_acute = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_acute + '/anat/' + subject + '_' + session_acute + '_T1w.nii.gz'
     ref_followup = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_followup + '/anat/' + subject + '_' + session_followup + '_T1w.nii.gz'
     ref_followup_2 = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_followup_2 + '/anat/' + subject + '_' + session_followup_2 + '_T1w.nii.gz'
+    # Temporary output  
+    tmp_acute = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_acute + '/anat/' + subject + '_' + session_acute + '_T1w_stroke-tmp.nii.gz'
+    tmp_followup = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_followup + '/anat/' + subject + '_' + session_followup + '_T1w_stroke-tmp.nii.gz'
+    tmp_followup_2 = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_followup_2 + '/anat/' + subject + '_' + session_followup_2 + '_T1w_stroke-tmp.nii.gz'
     # Final output  
     final_acute = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_acute + '/anat/' + subject + '_' + session_acute + '_T1w_stroke.nii.gz'
     final_followup = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_followup + '/anat/' + subject + '_' + session_followup + '_T1w_stroke.nii.gz'
     final_followup_2 = config["data"]["output_path"] + 'derivatives/' + subject + '/' + session_followup_2 + '/anat/' + subject + '_' + session_followup_2 + '_T1w_stroke.nii.gz'
+    
     # Masks are already in MNI, but they have different orientations, dimensions and affines
     is_there = False
     if os.path.exists(ref_acute):
-        os.system(f"cp {mask} {final_acute}")
-        os.system(f"fslswapdim {final_acute} -x y z {final_acute} && fslorient -swaporient {final_acute}")
-        os.system(f"mrgrid {final_acute} regrid {final_acute} -template {ref_acute} -force -quiet")
+        os.system(f"cp {mask} {tmp_acute}")
+        os.system(f"fslswapdim {tmp_acute} -x y z {tmp_acute} && fslorient -swaporient {tmp_acute}")
+        os.system(f"mrgrid {tmp_acute} regrid {final_acute} -template {ref_acute} -force -quiet")
+        os.system(f"rm {tmp_acute}")
         is_there = True
     if os.path.exists(ref_followup):
-        os.system(f"cp {mask} {final_followup}")
-        os.system(f"fslswapdim {final_followup} -x y z {final_followup} && fslorient -swaporient {final_followup}")
-        os.system(f"mrgrid {final_followup} regrid {final_followup} -template {ref_followup} -force -quiet")
+        os.system(f"cp {mask} {tmp_followup}")
+        os.system(f"fslswapdim {tmp_followup} -x y z {tmp_followup} && fslorient -swaporient {tmp_followup}")
+        os.system(f"mrgrid {tmp_followup} regrid {final_followup} -template {ref_followup} -force -quiet")
+        os.system(f"rm {tmp_followup}")
         is_there = True
     if os.path.exists(ref_followup_2):
-        os.system(f"cp {mask} {final_followup_2}")
-        os.system(f"fslswapdim {final_followup_2} -x y z {final_followup_2} && fslorient -swaporient {final_followup_2}")
-        os.system(f"mrgrid {final_followup_2} regrid {final_followup_2} -template {ref_followup_2} -force -quiet")
+        os.system(f"cp {mask} {tmp_followup_2}")
+        os.system(f"fslswapdim {tmp_followup_2} -x y z {tmp_followup_2} && fslorient -swaporient {tmp_followup_2}")
+        os.system(f"mrgrid {tmp_followup_2} regrid {final_followup_2} -template {ref_followup_2} -force -quiet")
+        os.system(f"rm {tmp_followup_2}")
         is_there = True
     if not is_there:
         logging.info(f" {subject} No lesion mask")
