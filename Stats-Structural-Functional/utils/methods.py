@@ -53,12 +53,27 @@ def FFT_sampling_points (delta_t, length=180, bin1=2.4, bin2=2.1, eps=0.0001):
         current fmri series. For some reason the (idiot) MR technitian
         decided to use a temproal bin of either 2.4 or 2.1 seconds.
     To be used only in the rfft function!
+
+    Inputs:
+    -------
+
+    Outputs:
+    --------
+
     """
-    if (delta_t >= bin1-eps)*(delta_t <= bin1+eps):
-        return length
+    bin = np.max([bin1, bin2])
+    if (delta_t >= bin-eps)*(delta_t <= bin+eps):
+        extra_bins = 0
     else:
         extra_bins = int(np.abs(bin1-bin2)*length/delta_t)+1
-        return length + extra_bins
+        
+    points = length + extra_bins
+    if points%2 == 0:
+        fft_length = int(length/2 + 1)
+    else:
+        fft_length = int((length+1)/2)
+    
+    return points, fft_length
 
 def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
         CONTROL_paired, C_subjects_paired, CONTROL_unpaired, C_subjects_unpaired, 
@@ -78,7 +93,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
     results_patients = pd.DataFrame(columns=['Subject', 'Total power', 'Power per bin (%)', 'Cumulative Power (%)', 'Oedema BOLD signal', 'time (s)'])
     print(f"Analysing {subject} in {session}")
 
-    lesion_name = f"./datasets/structural/images/{session}/lesion_MNI_{session}_3mm/{subject}_{session}_T1w_tumor_3mm.nii.gz"
+    lesion_name = f"./Data/structural/images/{session}/lesion_MNI_{session}_3mm/{subject}_{session}_T1w_tumor_3mm.nii.gz"
     try:
         # Load lesion
         lesion = nib.load(lesion_name)
@@ -87,7 +102,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
         # Patient Voxel_wise mean-temporal BOLD
         masked_bold = bold * oedema
     except:
-        name = f"./datasets/structural/images/{session}/lesion_MNI_{session}_3mm/regridded_tumor.nii.gz"
+        name = f"./Data/structural/images/{session}/lesion_MNI_{session}_3mm/regridded_tumor.nii.gz"
         os.system(f"mrgrid {lesion_name} regrid {name} -size {dim1},{dim2},{dim3} -force -quiet")# Load lesion
         lesion = nib.load(name)
         oedema = np.repeat(lesion.get_fdata()[:,:,:,np.newaxis], bold.shape[3], axis=3)
@@ -107,7 +122,9 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
     # Fourier reconstruction
     P_error_fft_reconstruction, cutoffs = np.zeros((10,)), np.zeros((10,), dtype=np.int64)
     bin_P_power, P_power = np.zeros((10,)), np.zeros((10,))
-    fft = np.fft.rfft(mean_patient, n=FFT_sampling_points(delta_t))
+    n_points, fft_length = FFT_sampling_points(delta_t, length=len(mean_patient))
+    fft = np.fft.rfft(mean_patient, n=n_points)
+    fft = fft[:fft_length]
     lower_cut = 0
     for j, percent in enumerate(range(10, 110, 10)):
         cutoff = int(len(fft)*percent/100)
@@ -141,7 +158,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
             healthy_bold = healthy.get_fdata()
             masked_bold_healthy = healthy_bold * oedema
         except:
-            name = f'./datasets/functional/images/control/{session}/regridded.nii.gz'
+            name = f'./Data/functional/images/control/{session}/regridded.nii.gz'
             os.system(f"mrgrid {C_fi} regrid {name} -size {dim1},{dim2},{dim3} -force -quiet")
             healthy = nib.load(name)
             healthy_bold = healthy.get_fdata()    
@@ -160,7 +177,9 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
         mean_control[i,...] = np.nanmean(masked_bold_voxel_control, axis=0)
 
         # Fourier reconstruction
-        fft = np.fft.rfft(mean_control[i,...], n=FFT_sampling_points(delta_t_H))
+        n_points, fft_length = FFT_sampling_points(delta_t_H, length=len(mean_control[i,...]))
+        fft = np.fft.rfft(mean_control[i,...], n=n_points)
+        fft = fft[:fft_length]
         lower_cut = 0
         for j, percent in enumerate(range(10, 110, 10)):
             cutoff = int(len(fft)*percent/100)
@@ -179,10 +198,10 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
 
 def DMN_overlap(subject, session, mm='3'):
     # Overlap
-    DMN_img = nib.load(f"./datasets/atlas/DMN_{mm}{mm}{mm}mm.nii")
+    DMN_img = nib.load(f"./Data/atlas/DMN_{mm}{mm}{mm}mm.nii")
     DMN = DMN_img.get_fdata()
     DMN = DMN[...,0] if len(DMN.shape)==4 else DMN
-    lesion_img = nib.load(f"./datasets/structural/images/{session}/lesion_MNI_{session}_{mm}mm/{subject}_{session}_T1w_tumor_{mm}mm.nii.gz")
+    lesion_img = nib.load(f"./Data/structural/images/{session}/lesion_MNI_{session}_{mm}mm/{subject}_{session}_T1w_tumor_{mm}mm.nii.gz")
     lesion, affine = lesion_img.get_fdata(), lesion_img.affine
     overlap_image = np.where(DMN * lesion >= 0.01, 1, 0)
     overlap = np.sum(overlap_image)/np.sum(np.where(DMN >= 0.01, 1, 0))
@@ -190,7 +209,7 @@ def DMN_overlap(subject, session, mm='3'):
     nib.save(nib.Nifti1Image(overlap_image, DMN_img.affine, DMN_img.header), name)
 
     # Euclidean distance
-    cm_DMN = np.load('./datasets/atlas/DMN_Centroids.npy')
+    cm_DMN = np.load('./Data/atlas/DMN_Centroids.npy')
     cm_lesion = np.append(ndimage.center_of_mass(lesion), 1)
     cm_lesion_MNI = np.tile((affine @ cm_lesion)[:-1], (cm_DMN.shape[0],1))
     E_distance = np.linalg.norm(cm_lesion_MNI-cm_DMN, axis=1)
@@ -198,16 +217,16 @@ def DMN_overlap(subject, session, mm='3'):
     
 def BOLD_DMN(subject, session, path, mm='3', type_subject='healthy'):
     # DMN labels
-    dmn = nib.load(f"./datasets/atlas/DMN_{mm}{mm}{mm}mm.nii")
+    dmn = nib.load(f"./Data/atlas/DMN_{mm}{mm}{mm}mm.nii")
     dmn_data = dmn.get_fdata()
     dmn_labels = np.unique(dmn_data[np.nonzero(dmn_data)])
 
     # Healthy BOLD
     if type_subject == 'healthy':
-        healthy = nib.load(f"./datasets/functional/images/control/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
+        healthy = nib.load(f"./Data/functional/images/control/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
         bold = healthy.get_fdata()
     elif type_subject == 'patient':
-        healthy = nib.load(f"./datasets/functional/images/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
+        healthy = nib.load(f"./Data/functional/images/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
         bold = healthy.get_fdata()
     else:
         pass
@@ -231,7 +250,10 @@ def BOLD_DMN(subject, session, path, mm='3', type_subject='healthy'):
         # Fourier reconstruction
         Error_fft_reconstruction, cutoffs = np.zeros((10,)), np.zeros((10,), dtype=np.int64)
         bin_power, Power = np.zeros((10,)), np.zeros((10,))
-        fft = np.fft.rfft(dmn_region_bold[i,...], n=FFT_sampling_points(delta_t))
+
+        n_points, fft_length = FFT_sampling_points(delta_t, length=len(dmn_region_bold[i,...]))
+        fft = np.fft.rfft(dmn_region_bold[i,...], n=n_points)
+        fft = fft[:fft_length]
         lower_cut = 0
         for j, percent in enumerate(range(10, 110, 10)):
             cutoff = int(len(fft)*percent/100)

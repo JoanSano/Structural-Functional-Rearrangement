@@ -76,7 +76,7 @@ def Power_Analysis_Figures(
         H_power, bin_H_power, Full_H_power, 
         P_power, bin_P_power, Full_Power_P, 
         mean_control, mean_patient, time_axis_H, time_axis_P,
-        Nc, subject, session, info, subject_figures_path
+        Nc, subject, session, info, subject_figures_path, fig_fmt="png"
     ):
 
     _, p = ttest_1samp(Full_H_power, Full_Power_P, alternative='two-sided')
@@ -124,7 +124,7 @@ def Power_Analysis_Figures(
     inset.spines['bottom'].set_visible(False), inset.set_xlim([0, 450])
     inset.set_xticks(np.arange(0,450,100)), inset.tick_params(axis='both', which='both', length=0)
 
-    plt.savefig(subject_figures_path+subject+f'_{session}_power-analysis_BOLD-signal_oedema.svg', dpi=1000)
+    plt.savefig(subject_figures_path+subject+f'_{session}_power-analysis_BOLD-signal_oedema.'+fig_fmt, dpi=1000)
     plt.close()
 
     # BOLD activity inside Oedema
@@ -142,10 +142,10 @@ def Power_Analysis_Figures(
     ax.set_ylabel("BOLD", fontsize=14), ax.set_xlabel("time ($\Delta t$)", fontsize=10)
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False)
     ax.set_title("Whole Tumor Signal", fontsize=14)
-    plt.savefig(subject_figures_path+subject+f'_{session}_BOLD-signal_oedema.svg', dpi=1000)
+    plt.savefig(subject_figures_path+subject+f'_{session}_BOLD-signal_oedema.'+fig_fmt, dpi=1000)
     plt.close()
 
-def BOLD_DMN_regions(bold_signals, time_axis, labels, name, communities):
+def BOLD_DMN_regions(bold_signals, time_axis, labels, name, communities, fig_fmt="png"):
     N_regions = bold_signals.shape[0]
     if N_regions%2 != 0: 
         nrows = N_regions//2 + 1
@@ -221,7 +221,7 @@ def BOLD_DMN_regions(bold_signals, time_axis, labels, name, communities):
     ax[-1].spines['right'].set_visible(False), ax[-1].spines['top'].set_visible(False)
     ax[-1].spines['bottom'].set_visible(False), ax[-1].spines['left'].set_visible(False)
     ax[-1].set_yticks([]), ax[-1].set_xticks([])
-    plt.savefig(name.split('.')[0]+'-ACF.svg', dpi=1000)
+    plt.savefig(name.split('.')[0]+'-ACF.'+fig_fmt, dpi=1000)
     plt.close()
 
     return acf, p_val
@@ -232,7 +232,7 @@ def DMN_patient_vs_healthy(
     DMN_power_T_patient, DMN_power_cum_patient, DMN_power_bin_patient, DMN_regions_patient, communities_patient, DMN_CorrNet_patient, dmn_region_time_patient,
     DMN_ACF_healthy, DMN_ACF_patient, DMN_regions_healthy_ACF_pval, DMN_regions_patient_ACF_pval,
     DMN_Complexity_healthy, DMN_Complexity_patient,
-    Nc, subject, session, info, subject_figures_path
+    Nc, subject, session, info, subject_figures_path, fig_fmt="png"
     ):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
     plt.subplots_adjust(left=0.05,
@@ -385,7 +385,7 @@ def DMN_patient_vs_healthy(
     inset.set_xticklabels([])
     inset.tick_params(axis='both', which='both', length=0)
 
-    plt.savefig(subject_figures_path+subject+f'_{session}_DMN-comparisson.svg', dpi=1000)
+    plt.savefig(subject_figures_path+subject+f'_{session}_DMN-comparisson.'+fig_fmt, dpi=1000)
     plt.close()
 
 def group_analysis(
@@ -393,7 +393,7 @@ def group_analysis(
     distance, richness_change, dynamic_oedema_change_or,
     Nc, Np, session,
     power_change, healthy_power, 
-    tumor_type, tumor_size, tumor_ventr, tumor_loc, tumor_grade
+    tumor_type, tumor_size, tumor_ventr, tumor_loc, tumor_grade, fig_fmt="png"
     ):
     # Wee keep the original direction of DAS
     dynamic_change_or = np.copy(dynamic_change) 
@@ -659,6 +659,6 @@ def group_analysis(
     inset.set_xlabel("$\Delta$DAS (Oedema)"), inset.set_yticks([1.15,2.05]), inset.set_yticklabels(["Meningioma", "Glioma"], rotation = 90)
     inset.set_ylim([0.8,2.2]), inset.yaxis.set_ticks_position('none')"""
 
-    plt.savefig(f"RESULTS/figures/functional/{session}/global-analysis_{session}.svg", dpi=1000)
+    plt.savefig(f"RESULTS/figures/functional/{session}/global-analysis_{session}."+fig_fmt, dpi=1000)
     plt.close()
 

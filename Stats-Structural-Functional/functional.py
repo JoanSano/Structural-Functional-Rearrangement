@@ -18,16 +18,17 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     figs = True if args.figures.lower()=='true' else False
+    fig_fmt = "png"
     ###################################
     ### Get files in an ordered way ###
     ###################################
-    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files("./datasets/functional/images/", sessions='*', subject="CON")
-    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files("./datasets/functional/images/", sessions='*', subject="PAT", exclude='*lesion*')
+    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files("./Data/functional/images/", sessions='*', subject="CON")
+    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files("./Data/functional/images/", sessions='*', subject="PAT", exclude='*lesion*')
     
     ######################
     ### Tumor Features ###
     ######################
-    info = pd.read_csv('datasets/participants.tsv', sep='\t')
+    info = pd.read_csv('Data/participants.tsv', sep='\t')
     info = info[info["participant_id"].str.contains("CON") == False]
     info.set_index(info.participant_id, inplace=True)
     info.drop(['participant_id'], axis=1, inplace=True)
@@ -133,7 +134,7 @@ if __name__ == '__main__':
 
                 if figs:
                     C_path = check_path(f"RESULTS/figures/functional/control/{session}/{C_subject}/")
-                    png_name = C_path + f"{C_subject}_{session}_DMN-region-BOLD.svg"
+                    png_name = C_path + f"{C_subject}_{session}_DMN-region-BOLD."+fig_fmt
                     DMN_regions_healthy_ACF_pre[i], DMN_regions_healthy_ACF_pval_pre[i] = BOLD_DMN_regions(DMN_region_bold_healthy_pre[i], dmn_region_time, DMN_regions_healthy_pre[i], png_name, cms)
                     print(f"{C_subject}_{session} DMN ready")
 
@@ -145,7 +146,7 @@ if __name__ == '__main__':
 
                 if figs:
                     C_path = check_path(f"RESULTS/figures/functional/control/{session}/{C_subject}/")
-                    png_name = C_path + f"{C_subject}_{session}_DMN-region-BOLD.svg"
+                    png_name = C_path + f"{C_subject}_{session}_DMN-region-BOLD."+fig_fmt
                     DMN_regions_healthy_ACF_post[i], DMN_regions_healthy_ACF_pval_post[i] = BOLD_DMN_regions(DMN_region_bold_healthy_post[i], dmn_region_time, DMN_regions_healthy_post[i], png_name, cms)
                     print(f"{C_subject}_{session} DMN ready")
             print(f"{C_subject} in {session} DMN BOLD signal done")
@@ -213,7 +214,7 @@ if __name__ == '__main__':
                 
                 if figs:
                     # DMN
-                    png_name = subject_figures_path + f"{subject}_{session}_DMN-region-BOLD.svg"
+                    png_name = subject_figures_path + f"{subject}_{session}_DMN-region-BOLD."+fig_fmt
                     DMN_regions_patient_ACF_pre[pat], DMN_regions_patient_ACF_pval_pre[pat] = BOLD_DMN_regions(DMN_region_bold_patient_pre[pat], dmn_region_time, DMN_regions_patient_pre[pat], png_name, cms)
                     # DMN comparisson
                     DMN_patient_vs_healthy(
@@ -266,7 +267,7 @@ if __name__ == '__main__':
 
                 if figs:
                     # DMN
-                    png_name = subject_figures_path + f"{subject}_{session}_DMN-region-BOLD.svg"
+                    png_name = subject_figures_path + f"{subject}_{session}_DMN-region-BOLD."+fig_fmt
                     DMN_regions_patient_ACF_post[pat], DMN_regions_patient_ACF_pval_post[pat] = BOLD_DMN_regions(DMN_region_bold_patient_post[pat], dmn_region_time, DMN_regions_patient_post[pat], png_name, cms)
                     # DMN comparisson
                     DMN_patient_vs_healthy(
