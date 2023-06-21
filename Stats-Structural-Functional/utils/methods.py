@@ -135,7 +135,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
         ifft_cut = np.fft.irfft(fft_cut, dim4)
         P_error_fft_reconstruction[j] = ((mean_patient - ifft_cut)**2).mean()
         lower_cut = cutoff
-    Full_Power_P = P_power[-1]
+    Full_Power_P = np.sum(np.square(np.abs(np.fft.rfft(mean_patient)))) #P_power[-1]#
     bin_P_power = 100*bin_P_power/P_power[-1]
     P_power = 100*P_power/P_power[-1]
     results_patients.loc[len(results_patients.index)] = [subject, Full_Power_P, bin_P_power, P_power, mean_patient, time_axis_P]
@@ -264,7 +264,7 @@ def BOLD_DMN(subject, session, path, mm='3', type_subject='healthy'):
             ifft_cut = np.fft.irfft(fft_cut, dim4)
             Error_fft_reconstruction[j] = ((dmn_region_bold[i,...] - ifft_cut)**2).mean()
             lower_cut = cutoff
-        Full_Power = Power[-1]
+        Full_Power = np.sum(np.square(np.abs(np.fft.rfft(dmn_region_bold[i,...])))) #Power[-1]#
         bin_power = 100*bin_power/Power[-1]
         Power = 100*Power/Power[-1]
 
