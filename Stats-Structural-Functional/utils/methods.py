@@ -3,6 +3,7 @@ import numpy as np
 import nibabel as nib
 import os
 from scipy import ndimage
+from scipy.stats import pearsonr
 
 def pcc(x, y):
     cc = 0
@@ -189,7 +190,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
             ifft_cut = np.fft.irfft(fft_cut, dim4)
             H_error_fft_reconstruction[i,j] = ((mean_control[i,...] - ifft_cut)**2).mean()
             lower_cut = cutoff
-        Full_H_power[i] = H_power[i,-1]
+        Full_H_power[i] = np.sum(np.square(np.abs(np.fft.rfft(mean_control[i,...])))) #H_power[i,-1] #
         bin_H_power[i,:] = 100*bin_H_power[i,:]/H_power[i,-1]
         H_power[i,:] = 100*H_power[i,:]/H_power[i,-1]
         # Writing results in file
@@ -209,10 +210,10 @@ def DMN_overlap(subject, session, mm='3'):
     nib.save(nib.Nifti1Image(overlap_image, DMN_img.affine, DMN_img.header), name)
 
     # Euclidean distance
-    cm_DMN = np.load('./Data/atlas/DMN_Centroids.npy')
-    cm_lesion = np.append(ndimage.center_of_mass(lesion), 1)
-    cm_lesion_MNI = np.tile((affine @ cm_lesion)[:-1], (cm_DMN.shape[0],1))
-    E_distance = np.linalg.norm(cm_lesion_MNI-cm_DMN, axis=1)
+    cm_DMN = np.load('./Data/atlas/DMN_Centroids.npy') # In MNI space coordinates
+    cm_lesion = np.append(ndimage.center_of_mass(lesion), 1) # In voxel space (i.e., computed as voxel coordinates)
+    cm_lesion_MNI = np.tile((affine @ cm_lesion)[:-1], (cm_DMN.shape[0],1)) # From voxel to MNI space - repeat for each DMN region
+    E_distance = np.linalg.norm(cm_lesion_MNI-cm_DMN, axis=1) # Euclidean distance
     return overlap, E_distance.mean()
     
 def BOLD_DMN(subject, session, path, mm='3', type_subject='healthy'):
@@ -378,6 +379,18 @@ def coef_pvals(X, Y, regressor):
     myDF3["Names"],myDF3["Coefficients"],myDF3["Standard Errors"],myDF3["t values"],myDF3["Probabilities"] = [names,params,sd_b,ts_b,p_values]
  
     return myDF3, regressor.score(X, Y)
+
+def permutation_test_correlation(x, y, num_permutations=1000):
+    observed_corr, _ = pearsonr(x, y)
+    permuted_correlations = []
+
+    for _ in range(num_permutations):
+        permuted_y = np.random.permutation(y)
+        permuted_corr, _ = pearsonr(x, permuted_y)
+        permuted_correlations.append(permuted_corr)
+
+    p_value = (np.abs(permuted_correlations) >= np.abs(observed_corr)).mean()
+    return observed_corr, p_value
 
 if __name__ == '__main__':
     pass

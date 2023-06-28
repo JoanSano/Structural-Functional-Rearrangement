@@ -2,7 +2,7 @@ import matplotlib.pylab as plt
 import numpy as np
 from scipy.stats import ttest_1samp, mannwhitneyu, ttest_ind
 import statsmodels.api as sm
-
+from utils.methods import permutation_test_correlation
 
 import gc
 
@@ -404,7 +404,7 @@ def group_analysis(
     richness_change = np.abs(richness_change)
 
     from scipy.stats import pearsonr, linregress
-    print("=================================")
+    print("================ FIg. 2 =================")
     fig, ax = plt.subplots(3,2,figsize=(13,15))
     plt.subplots_adjust(left=0.05,
                     bottom=0.04, 
@@ -414,9 +414,9 @@ def group_analysis(
                     hspace=0.15)
     ax = ax.flatten()
     ax[-1].remove(), ax[-2].remove()
-    plt.gcf().text(0.01, 0.97, "A", fontsize=20, fontweight="bold")
-    plt.gcf().text(0.01, 0.65, "B", fontsize=20, fontweight="bold")
-    plt.gcf().text(0.01, 0.325, "C", fontsize=20, fontweight="bold")
+    plt.gcf().text(0.009, 0.97, "A", fontsize=20, fontweight="bold")
+    plt.gcf().text(0.009, 0.65, "B", fontsize=20, fontweight="bold")
+    plt.gcf().text(0.009, 0.325, "C", fontsize=20, fontweight="bold")
     plt.gcf().text(0.33, 0.325, "D", fontsize=20, fontweight="bold")
     plt.gcf().text(0.64, 0.325, "E", fontsize=20, fontweight="bold")
 
@@ -425,68 +425,129 @@ def group_analysis(
     mean_dynamic_change, sem_dynamic_change = np.mean(dynamic_change, axis=1), np.std(dynamic_change, axis=1)/np.sqrt(Nc)
     mean_pcc_sim, sem_pcc_sim = np.mean(pcc_sim, axis=1), np.std(pcc_sim, axis=1)/np.sqrt(Nc)
     r_dyn_pcc, p_dyn_pcc = pearsonr(mean_dynamic_change, mean_pcc_sim)
-    p_dyn_pcc = p_dyn_pcc / 2 # One-sided
     slope, intercept, _, _, _ = linregress(mean_dynamic_change, mean_pcc_sim)
     fit = slope * np.linspace(8,40,400) + intercept
     ax[0].scatter(mean_dynamic_change, mean_pcc_sim)
-    ax[0].errorbar(mean_dynamic_change, mean_pcc_sim, xerr=sem_dynamic_change, yerr=sem_pcc_sim, fmt='o')
-    ax[0].plot(np.linspace(8,40,400), fit, color='k', linewidth=0.5)
-    ax[0].text(40,0.4,f"r = {round(r_dyn_pcc,3)} \np = {round(p_dyn_pcc,3)}")
+    ax[0].errorbar(mean_dynamic_change, mean_pcc_sim, xerr=sem_dynamic_change_or, yerr=sem_pcc_sim, fmt='o')#, color="black", ecolor="black")
+    ax[0].plot(np.linspace(8,40,400), fit, linewidth=1.5, color="tab:blue")
+    ax[0].text(7,0.05,f"r = {round(r_dyn_pcc,3)} \np = {round(p_dyn_pcc,3)}", fontweight="bold", color="tab:blue")
     ax[0].spines['right'].set_visible(False), ax[0].spines['top'].set_visible(False)
-    ax[0].set_yticks([0,.1,.2,.3,.4]),ax[0].set_yticklabels(['0','0.1','0.2','0.3','0.4'])
-    ax[0].set_xlim([5,48]), ax[0].set_ylim([0,0.45])
+    ax[0].set_yticks([0,.1,.2,.3,.4,.5]),ax[0].set_yticklabels(['0','0.1','0.2','0.3','0.4','0.5'])
+    ax[0].set_xlim([5,45]), ax[0].set_ylim([0,0.5])
     ax[0].set_ylabel('Node similarity (PCC)'), ax[0].set_xlabel("|DAS| (DMN)")
+    positive_DAS, positive_pcc = mean_dynamic_change_or[mean_dynamic_change_or>=0], mean_pcc_sim[mean_dynamic_change_or>=0]
+    negative_DAS, negative_pcc = mean_dynamic_change_or[mean_dynamic_change_or<=0], mean_pcc_sim[mean_dynamic_change_or<=0]
+    r_dyn_pcc_pos, p_dyn_pcc_pos = permutation_test_correlation(positive_DAS, positive_pcc, num_permutations=5000)#pearsonr(positive_DAS, positive_pcc)
+    r_dyn_pcc_neg, p_dyn_pcc_neg = permutation_test_correlation(negative_DAS, negative_pcc, num_permutations=5000)#pearsonr(negative_DAS, negative_pcc)
+    slope_pos, intercept_pos, _, _, _ = linregress(positive_DAS, positive_pcc)
+    fit_pos = slope_pos * np.linspace(-5,40,400) + intercept_pos
+    slope_neg, intercept_neg, _, _, _ = linregress(negative_DAS, negative_pcc)
+    fit_neg = slope_neg * np.linspace(-35,5,400) + intercept_neg
+    left, bottom, width, height = [0.325, 0.88, 0.15, .10]
+    inset = fig.add_axes([left, bottom, width, height])
+    inset.spines['right'].set_visible(False), inset.spines['top'].set_visible(False)
+    inset.set_xticks([0]), inset.set_xticklabels(["0"]), inset.set_yticklabels([])
+    inset.xaxis.set_ticks_position('none'), inset.yaxis.set_ticks_position('none')
+    inset.set_xlabel("DAS (DMN)"), inset.set_ylabel("PCC")
+    inset.scatter(positive_DAS, positive_pcc, color='green', label="DAS>0", alpha=0.5)
+    inset.scatter(negative_DAS, negative_pcc, color='orange', label="DAS<0", alpha=0.5)
+    inset.plot(np.linspace(-5,40,400), fit_pos, color='green', linewidth=2)
+    inset.plot(np.linspace(-40,5,400), fit_neg, color='orange', linewidth=2)
+    inset.vlines(0,0,.4,colors="gray",linewidth=.5)
+    inset.text(10,0.08,f"p = {round(p_dyn_pcc_pos/2,3)}", color="green", fontweight="bold")
+    inset.text(10,0.03,f"p = {round(p_dyn_pcc_neg/2,3)}", color="orange", fontweight="bold")
+    print(f"Correlation |DAS| with Node similarity:  r={r_dyn_pcc}, p={p_dyn_pcc} __ two-tailed exact test")
+    print(f"Correlation DAS>0 with Node similarity:  r={r_dyn_pcc_pos}, p={p_dyn_pcc_pos/2} __ one-tailed permutation test 5000 resamples")
+    print(f"Correlation DAS<0 with Node similarity:  r={r_dyn_pcc_neg}, p={p_dyn_pcc_neg/2} __ one-tailed permutation test 5000 resamples")
+    print("---------------")
+
 
     #mean_dynamic_change, sem_dynamic_change = np.mean(dynamic_change, axis=1), np.std(dynamic_change, axis=1)/np.sqrt(Nc)
     mean_richness_sim, sem_richness_sim = np.mean(richness_change, axis=1), np.std(richness_change, axis=1)/np.sqrt(Nc)
     r_dyn_rich, p_dyn_rich = pearsonr(mean_dynamic_change_or, mean_richness_sim_or)
-    p_dyn_rich = p_dyn_rich / 2 # One sided
+    # p_dyn_rich = p_dyn_rich / 2 # One sided
     slope, intercept, _, _, _ = linregress(mean_dynamic_change_or, mean_richness_sim_or)
     fit = slope * np.linspace(-30,40,400) + intercept
     ax[1].scatter(mean_dynamic_change_or, mean_richness_sim_or, color='b')
     ax[1].errorbar(mean_dynamic_change_or, mean_richness_sim_or, xerr=sem_dynamic_change_or, yerr=sem_richness_sim_or, fmt='o', color='b')
-    ax[1].plot(np.linspace(-30,40,400), fit, color='k', linewidth=0.5)
-    ax[1].text(-30,0.075,f"r = {round(r_dyn_rich,3)} \np = {round(p_dyn_rich,3)}")
+    ax[1].plot(np.linspace(-30,40,400), fit, color='b', linewidth=2)
+    ax[1].text(-30,0.075,f"r = {round(r_dyn_rich,3)} \np = {round(p_dyn_rich,3)}", color='blue', fontweight="bold")
     ax[1].spines['right'].set_visible(False), ax[1].spines['top'].set_visible(False)
     ax[1].set_yticks([-.5,-.4,-.3,-.2,-.1,0,.1]),ax[1].set_yticklabels(['-0.5','-0.4','-0.3','-0.2','-0.1','0','0.1'])
     ax[1].set_xlim([-35,48]), ax[1].set_ylim([-0.55,0.15])
     ax[1].set_ylabel('$\Delta\Theta$ Complexity', color='b', fontweight='bold')
     ax[1].yaxis.label.set_color('blue'), ax[1].set_xlabel("DAS (DMN)")
+    r_dyn_rich_abs, p_dyn_rich_abs = pearsonr(mean_dynamic_change, mean_richness_sim)
+    # p_dyn_rich_abs = p_dyn_rich_abs / 2 # One sided
+    slope, intercept, _, _, _ = linregress(mean_dynamic_change, mean_richness_sim)
+    fit = slope * np.linspace(5,40,400) + intercept
     ax_bis = ax[1].twinx()
     ax_bis.scatter(mean_dynamic_change, mean_richness_sim, color='purple')
     ax_bis.errorbar(mean_dynamic_change, mean_richness_sim, xerr=sem_dynamic_change, yerr=sem_richness_sim, fmt='o', color='purple')
+    ax_bis.plot(np.linspace(5,40,400), fit, color='purple', linewidth=2)
+    ax_bis.text(32.5,0.3,f"r = {round(r_dyn_rich_abs,3)} \np = {round(p_dyn_rich_abs,3)}", color='purple', fontweight="bold")
     ax_bis.set_ylim([0,1]), ax_bis.set_yticks([0,.25,.5,.75,1]), ax_bis.set_yticklabels(['0','0.25','0.5','0.75','1'])
     ax_bis.set_ylabel('|$\Delta\Theta$| Complexity', color='purple', labelpad=-5, fontweight='bold')
     ax_bis.spines['top'].set_visible(False) #,ax_bis.spines['right'].set_visible(False)
     ax_bis.yaxis.label.set_color('purple')#, ax_bis.tick_params(direction="in")
+    print(f"Correlation DAS with Richness: r={r_dyn_rich}, p={p_dyn_rich} __ two-tailed exact test")
+    print(f"Correlation DAS with Richness (in absolutes): r={r_dyn_rich_abs}, p={p_dyn_rich_abs} __ two-tailed exact test")
+    print("---------------")
 
     # B
-    r_dyn_distance, p_dyn_distance = pearsonr(distance, mean_dynamic_change)
-    print("Correlation DAS with Euclidean distance: r=", r_dyn_distance, "p=", p_dyn_distance)
-    r_dyn_overlap, p_dyn_overlap = pearsonr(overlap, mean_dynamic_change)
-    slope, intercept, _, _, _ = linregress(overlap, mean_dynamic_change)
+    r_dyn_distance_abs, p_dyn_distance_abs = pearsonr(distance, mean_dynamic_change)
+    r_dyn_distance, p_dyn_distance = pearsonr(distance, mean_dynamic_change_or)
+    r_dyn_overlap_abs, p_dyn_overlap_abs = pearsonr(overlap, mean_dynamic_change)
+    r_dyn_overlap, p_dyn_overlap = pearsonr(overlap, mean_dynamic_change_or)
+    slope, intercept, _, _, _ = linregress(overlap, mean_dynamic_change_or)
     fit = slope * np.linspace(0,0.8,400) + intercept
-    ax[2].scatter(overlap, mean_dynamic_change)
-    ax[2].errorbar(overlap, mean_dynamic_change, yerr=sem_dynamic_change, fmt='o')
-    #ax[2].plot(np.linspace(0,0.8,400), fit, color='k', linewidth=0.5)
-    ax[2].text(0.61,42.5,f"r = {round(r_dyn_overlap,3)} \np = {round(p_dyn_overlap,3)}")
+    ax[2].scatter(mean_dynamic_change, distance, linewidths=2.5, color="cornflowerblue", edgecolors="royalblue")
     ax[2].spines['right'].set_visible(False), ax[2].spines['top'].set_visible(False)
-    ax[2].set_xlabel('Overlap'), ax[2].set_ylabel("|DAS| (DMN)")
-    ax[2].set_ylim([5,48])
+    ax[2].set_ylabel('Distance (MNI units)'), ax[2].set_xlabel("|DAS| (DMN)")
+    ax[2].text(20,92,f"r = {round(r_dyn_distance_abs,3)} \np = {round(p_dyn_distance_abs,3)}", color="royalblue")
+    ax_bis = ax[2].twinx()    
+    ax_bis.spines['right'].set_visible(False), ax_bis.spines['top'].set_visible(False)
+    ax_bis.spines['left'].set_position(('data', 45)), ax_bis.yaxis.set_label_position('left'), ax_bis.yaxis.set_ticks_position('left')
+    ax_bis.scatter(mean_dynamic_change+40, overlap, linewidths=2.5, color="lightsalmon", edgecolors="salmon")
+    ax_bis.text(60,0.7125,f"r = {round(r_dyn_overlap_abs,3)} \np = {round(p_dyn_overlap_abs,3)}", color="salmon")
+    ax_bis.set_xticks(np.arange(10,90,10)), ax_bis.set_xticklabels([10,20,30,40,10,20,30,40])
+    ax_bis.set_ylim([-0.05,0.8]), ax_bis.set_yticks([0,0.2,0.4,0.6,0.8]), ax_bis.set_yticklabels([0,0.2,0.4,0.6,0.8])
+    ax_bis.set_ylabel('Overlap (a. u.)')
+    print(f"Correlation DAS with Spatial overlap: r={r_dyn_overlap}, p={p_dyn_overlap} __ two-tailed")
+    print(f"Correlation |DAS| with Spatial overlap: r={r_dyn_overlap_abs}, p={p_dyn_overlap_abs} __ two-tailed")
+    print(f"Correlation DAS with Euclidean distance: r={r_dyn_distance}, p={p_dyn_distance} __ two-tailed")
+    print(f"Correlation |DAS| with Euclidean distance: r={r_dyn_distance_abs}, p={p_dyn_distance_abs} __ two-tailed")
+    print("---------------")
+    r_distance_pcc, p_distance_pcc = pearsonr(distance, mean_pcc_sim)
+    r_overlap_pcc, p_overlap_pcc = pearsonr(overlap, mean_pcc_sim)
+    print(f"Correlation PCC with Spatial overlap: r={r_overlap_pcc}, p={p_overlap_pcc} __ two-tailed")
+    print(f"Correlation PCC with Distance: r={r_distance_pcc}, p={p_distance_pcc} __ two-tailed")
+    print("---------------")
 
-    dynamic_oedema_change = np.abs(dynamic_oedema_change_or)
-    mean_dynamic_change, sem_dynamic_change = np.mean(dynamic_change, axis=1), np.std(dynamic_change, axis=1)/np.sqrt(Nc)
-    mean_dynamic_odema_sim, sem_dynamic_odema_sim = np.mean(dynamic_oedema_change, axis=1), np.std(dynamic_oedema_change, axis=1)/np.sqrt(Nc)
-    r_dyn_pcc, p_dyn_pcc = pearsonr(mean_dynamic_change, mean_dynamic_odema_sim)
-    slope, intercept, _, _, _ = linregress(mean_dynamic_change, mean_dynamic_odema_sim)
-    fit = slope * np.linspace(8,40,400) + intercept
-    ax[3].scatter(mean_dynamic_change, mean_dynamic_odema_sim)
-    ax[3].errorbar(mean_dynamic_change, mean_dynamic_odema_sim, xerr=sem_dynamic_change, yerr=sem_dynamic_odema_sim, fmt='o')
-    ax[3].plot(np.linspace(8,40,400), fit, color='k', linewidth=0.5)
-    ax[3].text(8,51,f"r = {round(r_dyn_pcc,3)} \np < 0.001")
+    #mean_dynamic_change, sem_dynamic_change = np.mean(dynamic_change_or, axis=1), np.std(dynamic_change_or, axis=1)/np.sqrt(Nc)
+    mean_dynamic_odema_sim, sem_dynamic_odema_sim = np.mean(dynamic_oedema_change_or, axis=1), np.std(dynamic_oedema_change_or, axis=1)/np.sqrt(Nc)
+    r_dyn_dyn, p_dyn_dyn = pearsonr(mean_dynamic_change_or, mean_dynamic_odema_sim)
+    r_dyn_dyn_abs, p_dyn_dyn_abs = pearsonr(mean_dynamic_change, np.mean(np.abs(dynamic_oedema_change_or), axis=1))
+    result = linregress(mean_dynamic_change_or, mean_dynamic_odema_sim)
+    slope, intercept, slope_err, intercept_err = result.slope, result.intercept, result.stderr, result.intercept_stderr
+    ci=1.96 # Confidence interval
+    slope_max, slope_min, intercept_max, intercept_min = (slope+ci*slope_err), (slope-ci*slope_err), (intercept+ci*intercept_err), (intercept-ci*intercept_err)
+    x1, x2 = np.linspace(0,40,400), np.linspace(-35,0,400) 
+    fit = slope * np.linspace(-35,40,400) + intercept
+    fit_max_max, fit_max_min, fit_min_max, fit_min_min = slope_max * x1 + intercept_max, slope_max * x2 + intercept_min, slope_min * x2 + intercept_max, slope_min * x1 + intercept_min
+    ax[3].scatter(mean_dynamic_change_or, mean_dynamic_odema_sim, color="royalblue")
+    ax[3].errorbar(mean_dynamic_change_or, mean_dynamic_odema_sim, xerr=sem_dynamic_change, yerr=sem_dynamic_odema_sim, fmt='o', color="black", ecolor="black")
+    ax[3].plot(np.linspace(-35,40,400), fit, color='salmon', linewidth=2)
+    ax[3].fill_between(x2, fit_min_max, fit_max_min, color="lightsalmon", alpha=0.1, linewidth=0)
+    ax[3].fill_between(x1, fit_max_max, fit_min_min, color="lightsalmon", alpha=0.1, linewidth=0)
+    plot_pval = " < 0.001" if p_dyn_dyn<0.001 else f" = {round(r_dyn_dyn,3)}"
+    ax[3].text(-35,40,f"r = {round(r_dyn_dyn,3)} \np{plot_pval}", fontweight="bold", color="salmon")
     ax[3].spines['right'].set_visible(False), ax[3].spines['top'].set_visible(False)
-    ax[3].set_xlim([5,48]), ax[3].set_ylim([0,58])
-    ax[3].set_ylabel('|DAS| (Whole Tumor)'), ax[3].set_xlabel("|DAS| (DMN)")
+    ax[3].set_xlim([-40,45]), ax[3].set_ylim([-40,55])
+    ax[3].set_ylabel('DAS (Whole Tumor)'), ax[3].set_xlabel("DAS (DMN)")
+    print(f"Correlation DAS (DMN vs Tumor): r={r_dyn_dyn}, p={p_dyn_dyn} __ two-tailed")
+    print(f"Correlation |DAS| (DMN vs Tumor): r={r_dyn_dyn_abs}, p={p_dyn_dyn_abs} __ two-tailed")
+    print("---------------")
 
     # C
     mean_power_H = np.mean(healthy_power, axis=1)
@@ -494,12 +555,15 @@ def group_analysis(
     pc_abs, dasc_abs = np.abs(pc), np.abs(dasc)
     _, p_pc = ttest_1samp(pc, 0, alternative='two-sided')
     _, p_pc_abs = ttest_1samp(pc_abs, 0, alternative='greater')
+    _, p_pc_abs_U = mannwhitneyu(pc_abs, 0, alternative='greater')
     _, p_dasc = ttest_1samp(dasc, 0, alternative='two-sided')
     _, p_dasc_abs = ttest_1samp(dasc_abs, 0, alternative='greater')
-    print(f"Power change: p={p_pc}")
-    print(f"Abs Power change: p={p_pc_abs}")
-    print(f"DAS change: p={p_dasc}")
-    print(f"ABS DAS change: p={p_dasc_abs}")
+    _, p_dasc_abs_U = mannwhitneyu(dasc_abs, 0, alternative='greater')
+    print(f"Power change: p={p_pc} __ two-tailed")
+    print(f"Abs Power change: pT={p_pc_abs}, pU={p_pc_abs_U} __ one-tailed")
+    print(f"DAS change: p={p_dasc} __ two-tailed")
+    print(f"ABS DAS change: pT={p_dasc_abs}, pU={p_dasc_abs_U} __ one-tailed")
+    print("---------------")
 
     # Plotting Relative Power
     left, bottom, width, height = [0.05, 0.025, 0.125, .3]
@@ -575,6 +639,7 @@ def group_analysis(
     print(f"DAS with ventricular: r={r_das_ventr} and p-val={p_das_ventr}")
     print(f"DAS with location: r={r_das_loc} and p-val={p_das_loc}")
     print(f"DAS with grade: r={r_das_grade} and p-val={p_das_grade}")
+    print("---------------")
     # Groups
     menin = np.array([i for i,j in zip(dasc, tumor_type) if j==1])
     gliom = np.array([i for i,j in zip(dasc, tumor_type) if j==2])
@@ -589,8 +654,8 @@ def group_analysis(
     # Tests
     _, pT_type = ttest_ind(menin, gliom, equal_var=False, alternative='two-sided')
     _, pU_type = mannwhitneyu(menin, gliom, alternative='two-sided')
-    _, pT_size = ttest_ind(small, large, equal_var=False, alternative='less')
-    _, pU_size = mannwhitneyu(small, large, alternative='less')
+    _, pT_size = ttest_ind(small, large, equal_var=False, alternative='two-sided')
+    _, pU_size = mannwhitneyu(small, large, alternative='two-sided')
     _, pT_ventr = ttest_ind(perivent, non_peri, equal_var=False, alternative='greater')
     _, pU_ventr = mannwhitneyu(perivent, non_peri, alternative='greater')
     _, pT_loc = ttest_ind(frontal, other, equal_var=False, alternative='two-sided')
@@ -598,10 +663,11 @@ def group_analysis(
     _, pT_grade = ttest_ind(grade_I, grade_II, equal_var=False, alternative='two-sided')
     _, pU_grade = mannwhitneyu(grade_I, grade_II, alternative='two-sided')
     print(f"Type (2s): pT={pT_type} and pU={pU_type}")
-    print(f"Size (1s): pT={pT_size} and pU={pU_size}")
+    print(f"Size (2s): pT={pT_size} and pU={pU_size}")
     print(f"Ventricular (1s): pT={pT_ventr} and pU={pU_ventr}")
     print(f"Location (2s): pT={pT_loc} and pU={pU_loc}")
     print(f"Grade (2s): pT={pT_grade} and pU={pU_grade}")
+    print("---------------")
     # Plots
     left, bottom, width, height = [0.69, 0.15, 0.28, .165]
     inset = fig.add_axes([left, bottom, width, height])
@@ -610,7 +676,8 @@ def group_analysis(
     inset.plot([0,1], [np.mean(perivent), np.mean(non_peri)], '-*', label='Periventricular', markersize=8)
     inset.plot([0,1], [np.mean(frontal), np.mean(other)], '--s', label='Frontal', markersize=5)
     inset.plot([0,1], [np.mean(grade_I), np.mean(grade_II)], '--s', label='Grade I', markersize=5)
-    inset.legend(frameon=False), inset.set_xlim([-0.3,1.3]), inset.set_xticks([0,1]), inset.set_xticklabels(["YES", "NO"])
+    inset.set_ylim([-.5,13])
+    inset.legend(frameon=False,ncols=2, loc='upper right'), inset.set_xlim([-0.3,1.3]), inset.set_xticks([0,1]), inset.set_xticklabels(["YES", "NO"])
     inset.spines['right'].set_visible(False), inset.spines['top'].set_visible(False)
     inset.set_ylabel("DAS",labelpad=0)
 

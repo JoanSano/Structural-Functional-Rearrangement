@@ -13,12 +13,12 @@ from gradients import *
 
 parser = argparse.ArgumentParser(description='Analysis of BOLD signals in Oedemas from brain tumors')
 parser.add_argument('--sessions', type=str, default='ses-preop', help='Session to analyze. * for all sessions. Input as comma separated list.')
-parser.add_argument('--figures', type=str, default='true', help='Make figures of results')
+parser.add_argument('--figures', type=str, default='false', help='Make figures of results')
 args = parser.parse_args()
 
 if __name__ == '__main__':
     figs = True if args.figures.lower()=='true' else False
-    fig_fmt = "png"
+    fig_fmt = "svg"
     ###################################
     ### Get files in an ordered way ###
     ###################################
@@ -215,7 +215,7 @@ if __name__ == '__main__':
                 if figs:
                     # DMN
                     png_name = subject_figures_path + f"{subject}_{session}_DMN-region-BOLD."+fig_fmt
-                    DMN_regions_patient_ACF_pre[pat], DMN_regions_patient_ACF_pval_pre[pat] = BOLD_DMN_regions(DMN_region_bold_patient_pre[pat], dmn_region_time, DMN_regions_patient_pre[pat], png_name, cms)
+                    DMN_regions_patient_ACF_pre[pat], DMN_regions_patient_ACF_pval_pre[pat] = BOLD_DMN_regions(DMN_region_bold_patient_pre[pat], dmn_region_time, DMN_regions_patient_pre[pat], png_name, cms, fig_fmt=fig_fmt)
                     # DMN comparisson
                     DMN_patient_vs_healthy(
                         DMN_region_bold_healthy_pre, DMN_region_bold_patient_pre[pat],
@@ -226,7 +226,7 @@ if __name__ == '__main__':
                         DMN_regions_healthy_ACF_pre, DMN_regions_patient_ACF_pre[pat],
                         DMN_regions_healthy_ACF_pval_pre, DMN_regions_patient_ACF_pval_pre[pat],
                         DMN_Complexity_healthy_pre, DMN_Complexity_patient_pre[pat],
-                        Nc, subject, session, info, subject_figures_path
+                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt
                     )
                     print(f"{subject}_{session} DMN ready")
                     # Oedema
@@ -234,7 +234,7 @@ if __name__ == '__main__':
                         Cum_Power_Healthy_pre[pat], Bin_Power_Healthy_pre[pat], Total_Power_Healthy_pre[pat], 
                         Cum_Power_Patients_pre[pat], Bin_Power_Patients_pre[pat], Total_Power_Patients_pre[pat], 
                         BOLD_oedema_Healthy_pre[pat], BOLD_oedema_Patient_pre[pat], time_series_Healthy_pre[pat], time_series_Patient_pre[pat],
-                        Nc, subject, session, info, subject_figures_path
+                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt
                     )  
                     print(f"{subject}_{session} Oedema ready")
             else:
@@ -268,7 +268,7 @@ if __name__ == '__main__':
                 if figs:
                     # DMN
                     png_name = subject_figures_path + f"{subject}_{session}_DMN-region-BOLD."+fig_fmt
-                    DMN_regions_patient_ACF_post[pat], DMN_regions_patient_ACF_pval_post[pat] = BOLD_DMN_regions(DMN_region_bold_patient_post[pat], dmn_region_time, DMN_regions_patient_post[pat], png_name, cms)
+                    DMN_regions_patient_ACF_post[pat], DMN_regions_patient_ACF_pval_post[pat] = BOLD_DMN_regions(DMN_region_bold_patient_post[pat], dmn_region_time, DMN_regions_patient_post[pat], png_name, cms, fig_fmt=fig_fmt)
                     # DMN comparisson
                     DMN_patient_vs_healthy(
                         DMN_region_bold_healthy_post, DMN_region_bold_patient_post[pat],
@@ -279,7 +279,7 @@ if __name__ == '__main__':
                         DMN_regions_healthy_ACF_post, DMN_regions_patient_ACF_post[pat],
                         DMN_regions_healthy_ACF_pval_post, DMN_regions_patient_ACF_pval_post[pat],
                         DMN_Complexity_healthy_post, DMN_Complexity_patient_post[pat],
-                        Nc, subject, session, info, subject_figures_path
+                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt
                     )
                     print(f"{subject}_{session} DMN ready")
                     # Oedema
@@ -287,7 +287,7 @@ if __name__ == '__main__':
                         Cum_Power_Healthy_post[pat], Bin_Power_Healthy_post[pat], Total_Power_Healthy_post[pat], 
                         Cum_Power_Patients_post[pat], Bin_Power_Patients_post[pat], Total_Power_Patients_post[pat], 
                         BOLD_oedema_Healthy_post[pat], BOLD_oedema_Patient_post[pat], time_series_Healthy_post[pat], time_series_Patient_post[pat],
-                        Nc, subject, session, info, subject_figures_path
+                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt
                     )
                     print(f"{subject}_{session} Oedema ready")
     try:
@@ -316,15 +316,16 @@ if __name__ == '__main__':
     else:
         print(f"Subject with Lower DMN DAS: {P_subjects_paired[min_index_DAS]}; DMN DAS={DMN_dynamic_change_pre.mean(axis=1)[min_index_DAS]}")
     print("=================================")
-    _, pT = ttest_1samp(DMN_Richness_change_pre.mean(axis=1), 0, alternative='two-sided')
-    print(f"Richness change with pT={pT}")
+    _, pU = mannwhitneyu(DMN_Richness_change_pre.mean(axis=1), 0, alternative='two-sided')
+    print(f"Richness change {DMN_Richness_change_pre.mean()} with pU={pU} __ two-tailed")
     _, pT = ttest_1samp(np.abs(DMN_Richness_change_pre).mean(axis=1), 0, alternative='greater')
-    print(f"Absolut Richness change with pT={pT}")
+    _, pU = mannwhitneyu(np.abs(DMN_Richness_change_pre).mean(axis=1), 0, alternative='greater')
+    print(f"Absolut Richness change {np.abs(DMN_Richness_change_pre).mean()} with pT={pT} and pU={pU} __ one-tailed")
     r_power_das, p_power_das = pearsonr(DMN_dynamic_change_pre.mean(axis=1), DMN_region_power_T_patient_pre.mean(axis=1))
     print(f"Correlation DAS with Power DMN: r={r_power_das} with p-value={p_power_das}")
     r_power_das, p_power_das = pearsonr(DMN_dynamic_change_pre.mean(axis=1), Oedema_T_power_change_pre.mean(axis=1))
     print(f"Correlation DAS with Power Oedema: r={r_power_das} with p-value={p_power_das}")
-
+    
     group_analysis(
         DMN_dynamic_change_pre, DMN_pcc_sim_pre, DMN_lesion_overlap_pre,
         DMN_lesion_distance_pre, DMN_Richness_change_pre, Relative_dynamics_pre,
@@ -334,8 +335,21 @@ if __name__ == '__main__':
         np.concatenate((tumor_sizes,tumor_sizes_unpaired)), 
         np.concatenate((tumor_ventricles,tumor_ventricles_unpaired)),
         np.concatenate((tumor_locs,tumor_locs_unpaired)),
-        np.concatenate((tumor_grade,tumor_grade_unpaired))
+        np.concatenate((tumor_grade,tumor_grade_unpaired)), fig_fmt="svg"
     )
+    '''
+    group_analysis(
+        DMN_dynamic_change_pre, DMN_pcc_sim_pre, DMN_lesion_overlap_pre,
+        DMN_lesion_distance_pre, DMN_Richness_change_pre, Relative_dynamics_pre,
+        Nc, Np, 'ses-preop',
+        Oedema_T_power_change_pre, Total_Power_Healthy_pre,
+        np.concatenate((tumor_types,tumor_types_unpaired)),
+        np.concatenate((tumor_sizes,tumor_sizes_unpaired)), 
+        np.concatenate((tumor_ventricles,tumor_ventricles_unpaired)),
+        np.concatenate((tumor_locs,tumor_locs_unpaired)),
+        np.concatenate((tumor_grade,tumor_grade_unpaired)), fig_fmt="png"
+    )
+    '''
 
     """ ############################
     ### Functional gradients ###
