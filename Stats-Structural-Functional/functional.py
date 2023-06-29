@@ -316,8 +316,9 @@ if __name__ == '__main__':
     else:
         print(f"Subject with Lower DMN DAS: {P_subjects_paired[min_index_DAS]}; DMN DAS={DMN_dynamic_change_pre.mean(axis=1)[min_index_DAS]}")
     print("=================================")
+    _, pT = ttest_1samp(DMN_Richness_change_pre.mean(axis=1), 0, alternative='two-sided')
     _, pU = mannwhitneyu(DMN_Richness_change_pre.mean(axis=1), 0, alternative='two-sided')
-    print(f"Richness change {DMN_Richness_change_pre.mean()} with pU={pU} __ two-tailed")
+    print(f"Richness change {DMN_Richness_change_pre.mean()} with pT={pT} and pU={pU} __ two-tailed")
     _, pT = ttest_1samp(np.abs(DMN_Richness_change_pre).mean(axis=1), 0, alternative='greater')
     _, pU = mannwhitneyu(np.abs(DMN_Richness_change_pre).mean(axis=1), 0, alternative='greater')
     print(f"Absolut Richness change {np.abs(DMN_Richness_change_pre).mean()} with pT={pT} and pU={pU} __ one-tailed")
