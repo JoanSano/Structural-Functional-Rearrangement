@@ -26,6 +26,7 @@ parser.add_argument('-F', '--folder', type=str, default='results', help="Results
 parser.add_argument('-M', '--model', type=str, default='linear', help="Trained model name")
 parser.add_argument('-W', '--wandb', type=bool, default=False, help="Whether to use wandb")
 parser.add_argument('--null_model', type=bool, choices=[False, True], help="Whether not to train the model to obtain a benchmark")
+parser.add_argument('--tractography', type=str, default='msmt', choices=["msmt", "hybrid"], help="Whether not to train the model to obtain a benchmark")
 
 # Data specs
 parser.add_argument('-S', '--split', type=int, default=20, help="Training and testing splitting")
@@ -67,7 +68,7 @@ if __name__ == '__main__':
 
         # Preparing data
         (CONTROL, CON_subjects), (data, PAT_subjects), (PAT_1session, PAT_1session_subjects) = prepare_data(
-        'data_hybrid/', dtype=torch.float64, rois=170, norm=False, flatten=True, del_rois=[35,36,81,82]
+        f'../Data/structural/graphs/{args.tractography}/', dtype=torch.float64, rois=170, norm=False, flatten=True, del_rois=[35,36,81,82]
         )
         
         # Creating or loading priors 
@@ -97,7 +98,7 @@ if __name__ == '__main__':
         from utils.figures import prior_stats
         prior_stats(thetas, entropies, mods, folder, prior_1, prior_2)
         quit() """
-
+        
         if args.prior[0].upper()+args.prior[1:].lower() == True:
             prior, mean_connections = load_anat_prior(folder)
         else:

@@ -21,8 +21,6 @@ class NonLinearRegres(nn.Module):
             nn.Linear(in_features=features, out_features=int(features*ampli), dtype=torch.float64),
             nn.Sigmoid(),
             nn.Linear(in_features=int(features*ampli), out_features=int(features*ampli), dtype=torch.float64),
-            nn.Sigmoid(),
-            nn.Linear(in_features=int(features*ampli), out_features=features, dtype=torch.float64)
         )
     
     def forward(self, x):
