@@ -22,8 +22,8 @@ if __name__ == '__main__':
     ###################################
     ### Get files in an ordered way ###
     ###################################
-    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files("./Data/functional/images/", sessions='*', subject="CON")
-    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files("./Data/functional/images/", sessions='*', subject="PAT", exclude='*lesion*')
+    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files("../Data/functional/images/", sessions='*', subject="CON")
+    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files("../Data/functional/images/", sessions='*', subject="PAT", exclude='*lesion*')
     
     ######################
     ### Tumor Features ###
