@@ -54,7 +54,7 @@ class GraphFromCSV:
         """
         self.conns = np.log1p(self.conns)
 
-    def __plot_graph(self, save=True, show=False, fig_size=(20,15), format='svg', dpi=500):
+    def __plot_graph(self, save=True, show=False, fig_size=(20,15), dpi=500):
         """
         Plot a graph. It assumes that the adjancency matrix is a csv file.
         """
@@ -64,7 +64,7 @@ class GraphFromCSV:
         cbar.set_label('Connection Strength', rotation=270)
         plt.tight_layout()
         if save:
-            plt.savefig(self.dir+self.name+format, dpi=dpi)      
+            plt.savefig(self.dir+self.name+'.svg', format='svg', dpi=dpi)      
         if show:
             plt.show()     
 

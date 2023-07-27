@@ -41,6 +41,9 @@ def connectome_msmt_csd(config, f, acronym):
                 if not os.path.exists(act_5tt_seg):
                     logging.info(" " + subject_ID + " in " + session + " 5TT segmentation done with the -premasked option")
                     os.system(f"5ttgen fsl {nii_t1} {act_5tt_seg} -premasked -nocrop -force -quiet")
+            # Include the pathological tissue as the 5th tissue type
+            if os.path.exists(tumor_t1) and not os.path.exists(act_5tt_seg):
+                os.system(f"5ttedit -path {tumor_t1} {act_5tt_seg} {act_5tt_seg} -force -quiet ")
 
         ### Response Function Estimation ### 
         wm_res, gm_res, csf_res = inter_dir+'wm_response.txt', inter_dir+'gm_response.txt', inter_dir+'csf_response.txt'
@@ -85,45 +88,37 @@ def connectome_msmt_csd(config, f, acronym):
             raise ValueError("Seedgin mechanism not implemented")
 
         ### Run tractography ###
-        tck_file = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '.tck'
-        tck_sift = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '_SIFT' + t_config['filtered'] + '.tck'
-        if skip and os.path.exists(tck_sift):
-            logging.info(" " + subject_ID + " in " + session + " SIFT Tractogram already available... skiping")
+        tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '.tck'
+        if skip and os.path.exists(tck_file):
+            logging.info(" " + subject_ID + " in " + session + " Tractogram already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating tractogram")
             if config['trac']['method'] == 'ACT':
                 os.system(f"tckgen -algorithm iFOD2 -act {act_5tt_seg} {tck_seeding} -backtrack -select {t_config['streams']} \
                         -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
-                        -fslgrad {bvec_dwi} {bval_dwi} -force -quiet {wm_norm} {tck_file}")
+                        -fslgrad {bvec_dwi} {bval_dwi} -cutoff {2*float(config['trac']['cutoff'])} -force -quiet {wm_norm} {tck_file}")
             else:
                 os.system(f"tckgen -algorithm iFOD2 {tck_seeding} -backtrack -select {t_config['streams']} \
                         -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
-                        -fslgrad {bvec_dwi} {bval_dwi} -mask {mask_dwi} -cutoff {config['trac']['cutoff']} -force -quiet {wm_norm} {tck_file}")
+                        -fslgrad {bvec_dwi} {bval_dwi} -mask {mask_dwi} -cutoff {config['trac']['cutoff']} \
+                        -force -quiet {wm_norm} {tck_file}")
 
         ### Streamline filtering ###
-        if skip and os.path.exists(tck_sift):
+        weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '.txt'
+        if skip and os.path.exists(weights_sift):
             logging.info(" " + subject_ID + " in " + session + " Filtered tractogram already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Filtering tractogram")
-            if t_config['filtered'] == "":
-                if config['trac']['method'] == 'ACT':
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -act {act_5tt_seg} -force -quiet")
-                else:
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -force -quiet")
-            else:
-                filtered = int(int(t_config['streams'])*float(t_config['filtered'])/100)
-                if config['trac']['method'] == 'ACT':
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -act {act_5tt_seg} -term_number {filtered} -force -quiet")
-                else:
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -term_number {filtered} -force -quiet")
+            os.system(f"tcksift2 {tck_file} {wm_norm} {weights_sift} -act {act_5tt_seg} -fd_scale_gm \
+                    -reg_tikhonov {t_config['sift2_tikhonov']} -reg_tv {t_config['sift2_tv']} -force -quiet")
 
         if t_config['save_trk']:
             logging.info(" " + subject_ID + " in " + session + " Converting to .trk")
-            tck2trk(nii_t1, tck_sift)
+            tck2trk(nii_t1, tck_file)
 
         ### Generate Connectome ###
-        cm_file = output_dir + subject_ID + '_' + session + '_CM.csv'
-        cm2tck = output_dir + subject_ID + '_' + session + '_cm2trac.txt'
+        cm_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '_CM.csv'
+        cm2tck = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '_cm2trac.txt'
         if config["space"] == 'MNI':
             atlas_path = config["paths"]['atlas_path']
         else:
@@ -132,15 +127,15 @@ def connectome_msmt_csd(config, f, acronym):
             logging.info(" " + subject_ID + " in " + session + " Connectome already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating connectome")
-            os.system(f"tck2connectome {tck_sift} {atlas_path} {cm_file} \
+            os.system(f"tck2connectome {tck_file} {atlas_path} {cm_file} -tck_weights_in {weights_sift} \
                         -symmetric -zero_diagonal -out_assignments {cm2tck} -force -quiet")
 
         ### Structural connectivity stats ###
-        if skip and os.path.exists(output_dir + '_' + subject_ID + session + '.png'):
+        if skip and os.path.exists(output_dir + '_' + subject_ID + session + '_trac-' + t_config['streams'] + '_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '.svg'):
             logging.info(" " + subject_ID + " in " + session + " Connectome stats already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Connectome stats")
-            cm_file = output_dir + subject_ID + '_' + session + '_CM.csv'
+            cm_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '_CM.csv'
             sg = GraphFromCSV(cm_file, subject_ID+'_'+session, output_dir)
             sg.flatten_graph(save=True) 
             sg.process_graph()

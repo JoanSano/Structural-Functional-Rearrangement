@@ -151,8 +151,8 @@ def hybrid(config, f, acronym):
             raise ValueError("Seeding mechanism not implemented")
 
         ### Run tractography through lesion without ACT ###
-        oedema_tck_file = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '_lesion.tck'
-        oedema_tck_sift = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '_lesion_SIFT.tck'
+        oedema_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_lesion.tck'
+        oedema_tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_lesion_SIFT.tck'
         if skip and os.path.exists(oedema_tck_sift):
             logging.info(" " + subject_ID + " in " + session + " SIFT lesion tractogram already available... skiping")
         else:
@@ -162,12 +162,13 @@ def hybrid(config, f, acronym):
             # We filter with fODFs from all over the brain without a fixed number of final streams
             os.system(f"tckgen -algorithm iFOD2 {oedema_tck_seeding} -backtrack -select {t_config['streams']} \
                 -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
-                -fslgrad {bvec_dwi} {bval_dwi} -mask {whole_t1_mask} -cutoff {config['trac']['cutoff']} -force -quiet  {wm_merged} {oedema_tck_file}")    
+                -fslgrad {bvec_dwi} {bval_dwi} -mask {whole_t1_mask} -cutoff {config['trac']['cutoff']} \
+                -force -quiet  {wm_merged} {oedema_tck_file}")    
             os.system(f"tcksift {oedema_tck_file} {wm_merged} {oedema_tck_sift} -act {act_5tt_seg_pathological} -force -quiet ") 
 
         ### Run tractography outside lesion with ACT ###
-        healthy_tck_file = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '_healthy.tck'
-        healthy_tck_sift = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '_healthy_SIFT' + t_config['filtered'] + '.tck'
+        healthy_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_healthy.tck'
+        healthy_tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_healthy_SIFT' + t_config['filtered'] + '.tck'
         if skip and os.path.exists(healthy_tck_sift):
             logging.info(" " + subject_ID + " in " + session + " SIFT healthy tractogram already available... skiping")
         else:
@@ -177,7 +178,7 @@ def hybrid(config, f, acronym):
             # We filter only with fODFs outside the lesion
             os.system(f"tckgen -algorithm iFOD2 -act {act_5tt_seg} {healthy_tck_seeding} -backtrack -select {t_config['streams']} \
                     -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
-                    -fslgrad {bvec_dwi} {bval_dwi} -force -quiet  {wm_norm} {healthy_tck_file}")
+                    -fslgrad {bvec_dwi} {bval_dwi} -cutoff {2*float(config['trac']['cutoff'])} -force -quiet  {wm_norm} {healthy_tck_file}")
             if t_config['filtered'] == "":
                 os.system(f"tcksift {healthy_tck_file} {wm_norm} {healthy_tck_sift} -act {act_5tt_seg} -force -quiet ")
             else:
@@ -185,8 +186,8 @@ def hybrid(config, f, acronym):
                 os.system(f"tcksift {healthy_tck_file} {wm_norm} {healthy_tck_sift} -act {act_5tt_seg} -term_number {filtered} -force -quiet ")
 
         ### Merge tractograms and filter them to avoid innecessary repetitions ###
-        merged_tck_file = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '.tck'
-        merged_tck_sift = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '_SIFT' + t_config['filtered'] + '.tck'
+        merged_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '.tck'
+        merged_tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT' + t_config['filtered'] + '.tck'
         if skip and os.path.exists(merged_tck_sift):
             logging.info(" " + subject_ID + " in " + session + " SIFT merged tractogram already available... skiping")
         else:

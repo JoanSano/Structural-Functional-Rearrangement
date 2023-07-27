@@ -104,8 +104,8 @@ def connectome_ss3t_csd(config, f, acronym):
             raise ValueError("Seedgin mechanism not implemented")
 
         ### Run tractography ###
-        tck_file = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '.tck'
-        tck_sift = output_dir + subject_ID + '_' + session + '_trac' + t_config['streams'] + '_SIFT' + t_config['filtered'] + '.tck'
+        tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '.tck'
+        tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT' + t_config['filtered'] + '.tck'
         if skip and os.path.exists(tck_sift):
             logging.info(" " + subject_ID + " in " + session + " SIFT Tractogram already available... skiping")
         else:
@@ -113,11 +113,12 @@ def connectome_ss3t_csd(config, f, acronym):
             if config['trac']['method'] == 'ACT':
                 os.system(f"tckgen -algorithm iFOD2 -act {act_5tt_seg} {tck_seeding} -backtrack -select {t_config['streams']} \
                         -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
-                        -fslgrad {bvec_dwi} {bval_dwi} -force -quiet {wm_norm} {tck_file}")
+                        -fslgrad {bvec_dwi} {bval_dwi} -cutoff {2*float(config['trac']['cutoff'])} -force -quiet {wm_norm} {tck_file}")
             else:
                 os.system(f"tckgen -algorithm iFOD2 {tck_seeding} -backtrack -select {t_config['streams']} \
                         -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
-                        -fslgrad {bvec_dwi} {bval_dwi} -mask {mask_dwi} -cutoff {config['trac']['cutoff']} -force -quiet {wm_norm} {tck_file}")
+                        -fslgrad {bvec_dwi} {bval_dwi} -mask {mask_dwi} -cutoff {config['trac']['cutoff']} \
+                        -force -quiet {wm_norm} {tck_file}")
 
         ### Streamline filtering ###
         if skip and os.path.exists(tck_sift):

@@ -13,15 +13,16 @@ def check_path(path):
 
 def get_subjects(config):
     """
-    Get all the subjects specified in the config file.
+    Get all the subjects specified in the config file. 
+    Sppecify the whole path to the subjects (not including the IDs).
     """
 
-    dataset_path = config['paths']['dataset_dir'] + 'derivatives/'
+    dataset_path = config['paths']['dataset_dir']
     subject_ID = config['paths']['subject']
     session = config['paths']['session']
 
     logging.info(" Target Dataset: " + dataset_path)
-    output_dwi = Popen(f"find {dataset_path if len(dataset_path)>0 else '.'} ! -path '*/intermediate/*' -wholename \'*/{subject_ID}/{session}/dwi/*_dwi.nii*\'",
+    output_dwi = Popen(f"find {dataset_path if len(dataset_path)>0 else '.'} ! -path '*/intermediate/*' -wholename \'*/{subject_ID}/ses-{session}/dwi/*_dwi.nii*\'",
                                         shell=True, stdout=PIPE)
     files_dwi = str(output_dwi.stdout.read()).removeprefix('b\'').removesuffix('\'').removesuffix('\\n').split('\\n')
     logging.info(" Found " + str(len(files_dwi)) + " subject(s) to process")

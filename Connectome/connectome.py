@@ -25,7 +25,7 @@ def run_connectome(config, acronym):
         # Use the specified number of threads
         num_threads = int(config["threads"])
 
-    if config['process'] == 'multi':
+    if config['process'] == 'multi' and len(files)>1:
         ### Multiprocessing the subjects ###
         procs = []
         for i in tqdm(range(len(files))):
