@@ -4,7 +4,7 @@ import re
 
 from utils.paths import get_files, output_directory
 from utils.graph import GraphFromCSV
-from utils.trac import tck2trk, lesion_deletion, upsample, merge_fods
+from utils.trac import tck2trk, lesion_deletion, upsample, merge_fods, extract_response_shell
 
 def hybrid(config, f, acronym):
     """
@@ -49,8 +49,25 @@ def hybrid(config, f, acronym):
             if not os.path.exists(act_5tt_seg):
                 logging.info(" " + subject_ID + " in " + session + " 5TT segmentation done with the -premasked option")
                 os.system(f"5ttgen fsl {nii_t1} {act_5tt_seg} -premasked -nocrop -force -quiet")
-        if os.path.exists(tumor_t1) and not os.path.exists(act_5tt_seg_pathological):
+        if skip and not os.path.exists(act_5tt_seg_pathological):
             os.system(f"5ttedit -path {tumor_t1} {act_5tt_seg} {act_5tt_seg_pathological} -force -quiet ")
+
+        ### Response Function Estimation - using only healthy tissue ### 
+        wm_res, gm_res, csf_res = inter_dir+'wm_response.txt', inter_dir+'gm_response.txt', inter_dir+'csf_response.txt'
+        vox = inter_dir+"res_voxels.mif"
+        if skip and os.path.exists(wm_res) and os.path.exists(gm_res) and os.path.exists(csf_res):
+            logging.info(" " + subject_ID + " in " + session + " Response functions outside lesion already available... skiping")
+        else:
+            logging.info(" " + subject_ID + " in " + session + " Estimating response functions outside lesion")
+            os.system(f"dwi2response dhollander {nii_dwi_bc} {wm_res} {gm_res} {csf_res} -mask {mask_dwi}\
+                        -fslgrad {bvec_dwi} {bval_dwi} -force -quiet -voxels {vox} ")
+            
+        oedema_wm_res, oedema_gm_res, oedema_csf_res = inter_dir+'oedema_wm_response.txt', inter_dir+'oedema_gm_response.txt', inter_dir+'oedema_csf_response.txt'
+        if skip and os.path.exists(oedema_wm_res) and os.path.exists(oedema_gm_res) and os.path.exists(oedema_csf_res):
+            logging.info(" " + subject_ID + " in " + session + " Response functions inside lesion already available... skiping")
+        else:
+            logging.info(" " + subject_ID + " in " + session + " Extracting the single shell response function")
+            extract_response_shell(wm_res, oedema_wm_res, gm_res, oedema_gm_res, csf_res, oedema_csf_res, config_shell=config['shell'])
 
         ####################################
         ### Reconstruction INSIDE oedema ###
@@ -61,19 +78,9 @@ def hybrid(config, f, acronym):
             logging.info(" " + subject_ID + " in " + session + " Single Shell extraction already available... skipping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Single Shell extraction")
-            os.system(f"dwiextract {nii_dwi_bc} {nii_dwi_sshell} -shells 0,{config['shell']} -fslgrad {bvec_dwi} {bval_dwi}\
+            os.system(f"dwiextract {nii_dwi_bc} {nii_dwi_sshell} -shells 0,{config['shell']['b_val']} -fslgrad {bvec_dwi} {bval_dwi}\
                         -export_grad_fsl {ss_bvec} {ss_bval} -force -quiet ")
             os.system(f"mrconvert {nii_dwi_sshell} -fslgrad {ss_bvec} {ss_bval} {nii_dwi_sshell} -force -quiet ")
-
-        ### Response Function Estimation ### 
-        oedema_wm_res, oedema_gm_res, oedema_csf_res = inter_dir+'oedema_wm_response.txt', inter_dir+'oedema_gm_response.txt', inter_dir+'oedema_csf_response.txt'
-        oedema_vox = inter_dir+"oedema_res_voxels.mif"
-        if skip and os.path.exists(oedema_wm_res) and os.path.exists(oedema_gm_res) and os.path.exists(oedema_csf_res):
-            logging.info(" " + subject_ID + " in " + session + " Response functions inside lesion already available... skiping")
-        else:
-            logging.info(" " + subject_ID + " in " + session + " Estimating response functions inside lesion")
-            os.system(f"dwi2response dhollander {nii_dwi_sshell} {oedema_wm_res} {oedema_gm_res} {oedema_csf_res} -mask {mask_dwi}\
-                        -fslgrad {ss_bvec} {ss_bval} -force -quiet -voxels {oedema_vox} ")
         
         ### Run the reconstruction algorithm ###
         oedema_wm_fod, oedema_gm_fod, oedema_csf_fod = inter_dir+'oedema_wm_fod.mif', inter_dir+'oedema_gm_fod.mif', inter_dir+'oedema_csf_fod.mif'
@@ -95,15 +102,6 @@ def hybrid(config, f, acronym):
         #####################################
         ### Reconstruction OUTSIDE oedema ###
         #####################################
-        ### Response Function Estimation ### 
-        wm_res, gm_res, csf_res = inter_dir+'wm_response.txt', inter_dir+'gm_response.txt', inter_dir+'csf_response.txt'
-        vox = inter_dir+"res_voxels.mif"
-        if skip and os.path.exists(wm_res) and os.path.exists(gm_res) and os.path.exists(csf_res):
-            logging.info(" " + subject_ID + " in " + session + " Response functions outside lesion already available... skiping")
-        else:
-            logging.info(" " + subject_ID + " in " + session + " Estimating response functions outside lesion")
-            os.system(f"dwi2response dhollander {nii_dwi_bc} {wm_res} {gm_res} {csf_res} -mask {mask_dwi}\
-                        -fslgrad {bvec_dwi} {bval_dwi} -force -quiet -voxels {vox} ")
 
         ### Run the reconstruction algorithm ###
         wm_fod, gm_fod, csf_fod = inter_dir+'wm_fod.mif', inter_dir+'gm_fod.mif', inter_dir+'csf_fod.mif'
@@ -134,6 +132,7 @@ def hybrid(config, f, acronym):
             os.system(f"mrconvert {oedema_wm_norm} {oedema_norm_nii} -quiet -force ")
             os.system(f"mrconvert {wm_norm} {norm_nii} -quiet -force ")
             wm_merged = merge_fods(norm_nii, oedema_norm_nii, inter_dir)
+        quit()
 
         ############################
         ### Fiber Tracking steps ###

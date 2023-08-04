@@ -77,6 +77,32 @@ def merge_fods(fod1, fod2, directory):
     os.system(f"rm {full_name}.nii.gz {fod1} {fod2}")
     return full_name+'.mif'
 
+def extract_tissue_response_shell(response, config_shell):
+    with open(response, 'r') as f:
+        full_response = f.readlines()
+    
+    new_response = ["# Shells: 0,"+config_shell['b_val']+"\n"]
+    new_response.append(full_response[1])
+    new_response.append(full_response[2])
+    new_response.append(full_response[1+int(config_shell['num'])])
+    return new_response
+    
+def extract_response_shell(response_1, new_response_1,
+                           response_2, new_response_2,
+                           response_3, new_response_3,
+                           config_shell
+                        ):
+    """
+    Extracts the response function corresponding to a particular shell from a multitissue 
+        repsonse function.
+    """
+    with open(new_response_1, 'w') as f:
+        f.writelines(extract_tissue_response_shell(response_1, config_shell))
+    with open(new_response_2, 'w') as f:
+        f.writelines(extract_tissue_response_shell(response_2, config_shell))
+    with open(new_response_3, 'w') as f:
+        f.writelines(extract_tissue_response_shell(response_3, config_shell))
+
 if __name__ == '__main__':
     # Convert single tck file
     import argparse
