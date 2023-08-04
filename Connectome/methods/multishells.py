@@ -4,7 +4,7 @@ import re
 
 from utils.paths import get_files, output_directory
 from utils.graph import GraphFromCSV
-from utils.trac import tck2trk
+from utils.trac import tck2trk, lesion_deletion, upsample
 
 def connectome_msmt_csd(config, f, acronym):
     """
@@ -41,21 +41,29 @@ def connectome_msmt_csd(config, f, acronym):
                 if not os.path.exists(act_5tt_seg):
                     logging.info(" " + subject_ID + " in " + session + " 5TT segmentation done with the -premasked option")
                     os.system(f"5ttgen fsl {nii_t1} {act_5tt_seg} -premasked -nocrop -force -quiet")
-            # Include the pathological tissue as the 5th tissue type
-            if os.path.exists(tumor_t1) and not os.path.exists(act_5tt_seg):
-                os.system(f"5ttedit -path {tumor_t1} {act_5tt_seg} {act_5tt_seg} -force -quiet ")
+        
+        ### Preparing the binary masks ###
+        if os.path.exists(tumor_t1) and os.path.exists(act_5tt_seg):
+            # Editing the 5TT image
+            os.system(f"5ttedit -path {tumor_t1} {act_5tt_seg} {act_5tt_seg} -force -quiet ")
+            # Proper response function estimation --> Only using diffusion signal in healthy tissue
+            tumor_dwi = upsample(tumor_t1, inter_dir+'TUMOR_'+mask_dwi.split('/')[-1], factor=1.5)
+            mask_dwi_no_lesion = lesion_deletion(mask_dwi, tumor_dwi, inter_dir)
+        else:
+            # Without lesion the mask to estimate the response function remains the same
+            mask_dwi_no_lesion = mask_dwi
 
-        ### Response Function Estimation ### 
+        ### Response Function Estimation - using only healthy tissue ### 
         wm_res, gm_res, csf_res = inter_dir+'wm_response.txt', inter_dir+'gm_response.txt', inter_dir+'csf_response.txt'
         if skip and os.path.exists(wm_res) and os.path.exists(gm_res) and os.path.exists(csf_res):
             logging.info(" " + subject_ID + " in " + session + " Response functions already available... skiping")
         else:
             vox = inter_dir+"res_voxels.mif"
             logging.info(" " + subject_ID + " in " + session + " Estimating response functions")
-            os.system(f"dwi2response dhollander {nii_dwi_bc} {wm_res} {gm_res} {csf_res} -mask {mask_dwi}\
+            os.system(f"dwi2response dhollander {nii_dwi_bc} {wm_res} {gm_res} {csf_res} -mask {mask_dwi_no_lesion}\
                         -fslgrad {bvec_dwi} {bval_dwi} -force -quiet -voxels {vox}")
 
-        ### Run the reconstruction algorithm ###
+        ### Run the reconstruction algorithm ### Whole-brain including the lesion
         wm_fod, gm_fod, csf_fod = inter_dir+'wm_fod.mif', inter_dir+'gm_fod.mif', inter_dir+'csf_fod.mif'
         if skip and os.path.exists(wm_fod) and os.path.exists(gm_fod) and os.path.exists(csf_fod):
             logging.info(" " + subject_ID + " in " + session + " fODFs already available... skiping")
@@ -71,7 +79,7 @@ def connectome_msmt_csd(config, f, acronym):
         else:
             logging.info(" " + subject_ID + " in " + session + " Normalizing fODFs")
             os.system(f"mtnormalise {wm_fod} {wm_norm} {gm_fod} {gm_norm} {csf_fod} {csf_norm} -mask {mask_dwi} -force -quiet")
-
+        
         ### Generate the seeds for the tractography ###
         if config['trac']['seeding'] == "gmwmi": # GrawMatter-WhiteMatter interface
             seeding_mask = inter_dir+'seed_mask.mif'

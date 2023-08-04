@@ -4,7 +4,7 @@ import re
 
 from utils.paths import get_files, output_directory
 from utils.graph import GraphFromCSV
-from utils.trac import tck2trk, upsample
+from utils.trac import tck2trk, lesion_deletion, upsample
 
 def connectome_ss3t_csd(config, f, acronym):
     """
@@ -47,9 +47,17 @@ def connectome_ss3t_csd(config, f, acronym):
                 if not os.path.exists(act_5tt_seg):
                     logging.info(" " + subject_ID + " in " + session + " 5TT segmentation done with the -premasked option")
                     os.system(f"5ttgen fsl {nii_t1} {act_5tt_seg} -premasked -nocrop -force -quiet")
-                if os.path.exists(lesion_t1):
-                    upsample(lesion_t1, lesion_t1_1mm, factor=1)
-                    os.system(f"5ttedit -path {lesion_t1_1mm} {act_5tt_seg} {act_5tt_seg} -force -quiet")
+        
+        ### Preparing the binary masks ###
+        if os.path.exists(lesion_t1) and os.path.exists(act_5tt_seg):
+                #upsample(lesion_t1, lesion_t1_1mm, factor=1)
+                os.system(f"5ttedit -path {lesion_t1} {act_5tt_seg} {act_5tt_seg} -force -quiet")
+                # Proper response function estimation --> Only using diffusion signal in healthy tissue
+                lesion_dwi = upsample(lesion_t1, inter_dir+'LESION_'+mask_dwi.split('/')[-1], factor=1.5)
+                mask_dwi_no_lesion = lesion_deletion(mask_dwi, lesion_dwi, inter_dir)
+        else:
+            # Without lesion the mask to estimate the response function remains the same
+            mask_dwi_no_lesion = mask_dwi
 
         ### Extract b0 + single shell ###
         nii_dwi_sshell, ss_bvec, ss_bval = inter_dir+'dwi_single_shell.mif', inter_dir+'bvec_single_shell.bvec', inter_dir+'bval_single_shell.bval'
@@ -57,7 +65,7 @@ def connectome_ss3t_csd(config, f, acronym):
             logging.info(" " + subject_ID + " in " + session + " Single Shell extraction already available... skipping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Single Shell extraction")
-            os.system(f"dwiextract {nii_dwi_bc} {nii_dwi_sshell} -shells 0,{config['shell']} -fslgrad {bvec_dwi} {bval_dwi}\
+            os.system(f"dwiextract {nii_dwi_bc} {nii_dwi_sshell} -shells 0,{config['shell']['bval']} -fslgrad {bvec_dwi} {bval_dwi}\
                         -export_grad_fsl {ss_bvec} {ss_bval} -force -quiet")
             os.system(f"mrconvert {nii_dwi_sshell} -fslgrad {ss_bvec} {ss_bval} {nii_dwi_sshell} -force -quiet")
 
@@ -68,10 +76,10 @@ def connectome_ss3t_csd(config, f, acronym):
         else:
             vox = inter_dir+"res_voxels.mif"
             logging.info(" " + subject_ID + " in " + session + " Estimating response functions")
-            os.system(f"dwi2response dhollander {nii_dwi_sshell} {wm_res} {gm_res} {csf_res} -mask {mask_dwi}\
+            os.system(f"dwi2response dhollander {nii_dwi_sshell} {wm_res} {gm_res} {csf_res} -mask {mask_dwi_no_lesion}\
                         -fslgrad {ss_bvec} {ss_bval} -force -quiet -voxels {vox}")
         
-        ### Run the reconstruction algorithm ###
+        ### Run the reconstruction algorithm ###  Whole-brain including the lesion
         wm_fod, gm_fod, csf_fod = inter_dir+'wm_fod.mif', inter_dir+'gm_fod.mif', inter_dir+'csf_fod.mif'
         if skip and os.path.exists(wm_fod) and os.path.exists(gm_fod) and os.path.exists(csf_fod):
             logging.info(" " + subject_ID + " in " + session + " fODFs already available... skiping")
@@ -105,9 +113,8 @@ def connectome_ss3t_csd(config, f, acronym):
 
         ### Run tractography ###
         tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '.tck'
-        tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT' + t_config['filtered'] + '.tck'
-        if skip and os.path.exists(tck_sift):
-            logging.info(" " + subject_ID + " in " + session + " SIFT Tractogram already available... skiping")
+        if skip and os.path.exists(tck_file):
+            logging.info(" " + subject_ID + " in " + session + " ractogram already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating tractogram")
             if config['trac']['method'] == 'ACT':
@@ -121,25 +128,17 @@ def connectome_ss3t_csd(config, f, acronym):
                         -force -quiet {wm_norm} {tck_file}")
 
         ### Streamline filtering ###
-        if skip and os.path.exists(tck_sift):
+        weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '.txt'
+        if skip and os.path.exists(weights_sift):
             logging.info(" " + subject_ID + " in " + session + " Filtered tractogram already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Filtering tractogram")
-            if t_config['filtered'] == "":
-                if config['trac']['method'] == 'ACT':
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -act {act_5tt_seg} -force -quiet")
-                else:
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -force -quiet")
-            else:
-                filtered = int(int(t_config['streams'])*float(t_config['filtered'])/100)
-                if config['trac']['method'] == 'ACT':
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -act {act_5tt_seg} -term_number {filtered} -force -quiet")
-                else:
-                    os.system(f"tcksift {tck_file} {wm_norm} {tck_sift} -term_number {filtered} -force -quiet")
+            os.system(f"tcksift2 {tck_file} {wm_norm} {weights_sift} -act {act_5tt_seg} -fd_scale_gm \
+                    -reg_tikhonov {t_config['sift2_tikhonov']} -reg_tv {t_config['sift2_tv']} -force -quiet")
                     
         if t_config['save_trk']:
             logging.info(" " + subject_ID + " in " + session + " Converting to .trk")
-            tck2trk(nii_t1, tck_sift)
+            tck2trk(nii_t1, tck_file)
 
         ### Generate Connectome ###
         cm_file = output_dir + subject_ID + '_' + session + '_CM.csv'
@@ -152,7 +151,7 @@ def connectome_ss3t_csd(config, f, acronym):
             logging.info(" " + subject_ID + " in " + session + " Connectome already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating connectome")
-            os.system(f"tck2connectome {tck_sift} {atlas_path} {cm_file} \
+            os.system(f"tck2connectome {tck_file} {atlas_path} {cm_file} -tck_weights_in {weights_sift} \
                         -symmetric -zero_diagonal -out_assignments {cm2tck} -force -quiet")
 
         ### Structural connectivity stats ###
