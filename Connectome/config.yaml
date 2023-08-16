@@ -4,10 +4,10 @@ paths:
   atlas_path: "/home/joanfr/Documents/Utils/AAL3/AAL3v1_1mm.nii.gz"
   
   # If null, then output is in the 'dataset_dir'
-  output_dir: "/home/joanfr/Documents/Hybrid-Examples_Review-1st/" 
+  output_dir: "/home/joanfr/Documents/" 
 
-  session: "*preop*" # opts: "preop", "psotop" // "*" means all sessions available
-  subject: "sub-PAT16" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  session: "*" # opts: "preop", "psotop" // "*" means all sessions available
+  subject: "sub-PAT*" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
   skip_subjects: ""  # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###
@@ -49,10 +49,10 @@ delete:
   weights_sift2: False
 
 ### PROCESSING TYPE ###
-process: "single" # [multi, single] processing of subjects
+process: "multi" # [multi, single] processing of subjects
 
 ### NUMBER OF THREADS TO launch ###
-threads: "1"
+threads: "8"
 
 ### SKIP EXISTING FILES ###
 skip: True

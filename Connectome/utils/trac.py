@@ -62,7 +62,7 @@ def upsample(input, output, factor=1.5):
 def merge_fods(fod1, fod2, directory):
     """
     Merges FODs from two different files. 
-    FODs should be mutually exclusive since a simple addition is done.
+    FODs need to be mutually exclusive since a simple addition is done.
     Possible future options could include some kind of averaging, but 
         not sure it's super useful.
     Inputs shoudl be in .nii.gz format.

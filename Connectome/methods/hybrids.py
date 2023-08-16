@@ -37,7 +37,7 @@ def hybrid(config, f, acronym):
         else:
             logging.info(" " + subject_ID + " in " + session + " bias field correction")
             os.system(f"dwibiascorrect ants {nii_dwi} {nii_dwi_bc} -fslgrad {bvec_dwi} {bval_dwi} -force -quiet ")
-
+        
         ### Run the 5-tissue-type segmentation ###
         act_5tt_seg = inter_dir + "5tt_seg.mif"
         act_5tt_seg_pathological = inter_dir + "5tt_seg_pathological.mif"
@@ -49,9 +49,11 @@ def hybrid(config, f, acronym):
             if not os.path.exists(act_5tt_seg):
                 logging.info(" " + subject_ID + " in " + session + " 5TT segmentation done with the -premasked option")
                 os.system(f"5ttgen fsl {nii_t1} {act_5tt_seg} -premasked -nocrop -force -quiet")
-        if skip and not os.path.exists(act_5tt_seg_pathological):
+        if skip and os.path.exists(act_5tt_seg_pathological):
+            logging.info(" " + subject_ID + " in " + session + " 5TT with lesion already available... skipping")
+        else:
             os.system(f"5ttedit -path {tumor_t1} {act_5tt_seg} {act_5tt_seg_pathological} -force -quiet ")
-
+        
         ### Response Function Estimation - using only healthy tissue ### 
         wm_res, gm_res, csf_res = inter_dir+'wm_response.txt', inter_dir+'gm_response.txt', inter_dir+'csf_response.txt'
         vox = inter_dir+"res_voxels.mif"
@@ -98,11 +100,11 @@ def hybrid(config, f, acronym):
         else:
             logging.info(" " + subject_ID + " in " + session + " Normalizing fODFs inside lesion")
             os.system(f"mtnormalise {oedema_wm_fod} {oedema_wm_norm} {oedema_gm_fod} {oedema_gm_norm} {oedema_csf_fod} {oedema_csf_norm} -mask {tumor_dwi} -force -quiet ")
-
+        quit()
+        
         #####################################
         ### Reconstruction OUTSIDE oedema ###
         #####################################
-
         ### Run the reconstruction algorithm ###
         wm_fod, gm_fod, csf_fod = inter_dir+'wm_fod.mif', inter_dir+'gm_fod.mif', inter_dir+'csf_fod.mif'
         wm_norm, gm_norm, csf_norm = inter_dir+'wm_fod_norm.mif', inter_dir+'gm_fod_norm.mif', inter_dir+'csf_fod_norm.mif'
@@ -132,7 +134,6 @@ def hybrid(config, f, acronym):
             os.system(f"mrconvert {oedema_wm_norm} {oedema_norm_nii} -quiet -force ")
             os.system(f"mrconvert {wm_norm} {norm_nii} -quiet -force ")
             wm_merged = merge_fods(norm_nii, oedema_norm_nii, inter_dir)
-        quit()
 
         ############################
         ### Fiber Tracking steps ###
