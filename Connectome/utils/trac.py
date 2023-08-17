@@ -103,6 +103,26 @@ def extract_response_shell(response_1, new_response_1,
     with open(new_response_3, 'w') as f:
         f.writelines(extract_tissue_response_shell(response_3, config_shell))
 
+def extract_healthy_streamlines_from_lesion():
+    # TODO
+    pass
+
+def compute_lesion_streamlines(number_file):
+    """
+    number_file: txt file containing the number of streamlines emerging a given lesion. The
+        structure of the data is as follows __
+            # Patient:\t sub-PATXX
+            # Healthy-subjects:\t YY
+            # --------------------
+            sub-CON01:\t 350909
+            ...
+            sub-CONZZ:\t 675648
+            Lesion:\t THE AVERAGE OF ALL PREVIOUS ENTRIES
+    """
+    with open(number_file, 'r') as f:
+        numbers = f.readlines()
+    return numbers[-1].strip().split("\t")
+
 if __name__ == '__main__':
     # Convert single tck file
     import argparse

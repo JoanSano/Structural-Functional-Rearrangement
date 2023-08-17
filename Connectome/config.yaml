@@ -4,10 +4,10 @@ paths:
   atlas_path: "/home/joanfr/Documents/Utils/AAL3/AAL3v1_1mm.nii.gz"
   
   # If null, then output is in the 'dataset_dir'
-  output_dir: "/home/joanfr/Documents/" 
+  output_dir: "/home/joanfr/Documents/Hybrid-Examples_Review-1st/" 
 
-  session: "*" # opts: "preop", "psotop" // "*" means all sessions available
-  subject: "sub-PAT*" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  session: "*preop*" # opts: "preop", "psotop" // "*" mean/s all sessions available
+  subject: "sub-PAT16" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
   skip_subjects: ""  # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###
