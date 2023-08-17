@@ -6,8 +6,8 @@ paths:
   # If null, then output is in the 'dataset_dir'
   output_dir: "/home/hippo/Joan/Ghent-Tumor_Network-Structural/" 
 
-  session: "*" # opts: "preop", "psotop" // "*" means all sessions available
-  subject: "*PAT*" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  session: "*preop*" # opts: "preop", "psotop" // "*" mean/s all sessions available
+  subject: "sub-PAT16" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
   skip_subjects: ""  # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###
@@ -52,7 +52,7 @@ delete:
 process: "multi" # [multi, single] processing of subjects
 
 ### NUMBER OF THREADS TO launch ###
-threads: "2"
+threads: "8"
 
 ### SKIP EXISTING FILES ###
 skip: True

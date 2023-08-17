@@ -4,7 +4,7 @@ import re
 
 from utils.paths import get_files, output_directory
 from utils.graph import GraphFromCSV
-from utils.trac import tck2trk, lesion_deletion, upsample, merge_fods, extract_response_shell
+from utils.trac import *
 
 def hybrid(config, f, acronym):
     """
@@ -37,7 +37,7 @@ def hybrid(config, f, acronym):
         else:
             logging.info(" " + subject_ID + " in " + session + " bias field correction")
             os.system(f"dwibiascorrect ants {nii_dwi} {nii_dwi_bc} -fslgrad {bvec_dwi} {bval_dwi} -force -quiet ")
-
+        
         ### Run the 5-tissue-type segmentation ###
         act_5tt_seg = inter_dir + "5tt_seg.mif"
         act_5tt_seg_pathological = inter_dir + "5tt_seg_pathological.mif"
@@ -49,9 +49,11 @@ def hybrid(config, f, acronym):
             if not os.path.exists(act_5tt_seg):
                 logging.info(" " + subject_ID + " in " + session + " 5TT segmentation done with the -premasked option")
                 os.system(f"5ttgen fsl {nii_t1} {act_5tt_seg} -premasked -nocrop -force -quiet")
-        if skip and not os.path.exists(act_5tt_seg_pathological):
+        if skip and os.path.exists(act_5tt_seg_pathological):
+            logging.info(" " + subject_ID + " in " + session + " 5TT with lesion already available... skipping")
+        else:
             os.system(f"5ttedit -path {tumor_t1} {act_5tt_seg} {act_5tt_seg_pathological} -force -quiet ")
-
+        
         ### Response Function Estimation - using only healthy tissue ### 
         wm_res, gm_res, csf_res = inter_dir+'wm_response.txt', inter_dir+'gm_response.txt', inter_dir+'csf_response.txt'
         vox = inter_dir+"res_voxels.mif"
@@ -98,11 +100,10 @@ def hybrid(config, f, acronym):
         else:
             logging.info(" " + subject_ID + " in " + session + " Normalizing fODFs inside lesion")
             os.system(f"mtnormalise {oedema_wm_fod} {oedema_wm_norm} {oedema_gm_fod} {oedema_gm_norm} {oedema_csf_fod} {oedema_csf_norm} -mask {tumor_dwi} -force -quiet ")
-
+        
         #####################################
         ### Reconstruction OUTSIDE oedema ###
         #####################################
-
         ### Run the reconstruction algorithm ###
         wm_fod, gm_fod, csf_fod = inter_dir+'wm_fod.mif', inter_dir+'gm_fod.mif', inter_dir+'csf_fod.mif'
         wm_norm, gm_norm, csf_norm = inter_dir+'wm_fod_norm.mif', inter_dir+'gm_fod_norm.mif', inter_dir+'csf_fod_norm.mif'
@@ -132,11 +133,10 @@ def hybrid(config, f, acronym):
             os.system(f"mrconvert {oedema_wm_norm} {oedema_norm_nii} -quiet -force ")
             os.system(f"mrconvert {wm_norm} {norm_nii} -quiet -force ")
             wm_merged = merge_fods(norm_nii, oedema_norm_nii, inter_dir)
-        quit()
-
-        ############################
-        ### Fiber Tracking steps ###
-        ############################
+        
+        ###############
+        ### Seeding ###
+        ###############
         ### Generate the seeding masks for the tractography ###
         if config['trac']['seeding'] == "random":
             oedema_tck_seeding = "-seed_image " + tumor_dwi
@@ -149,62 +149,70 @@ def hybrid(config, f, acronym):
         else:
             raise ValueError("Seeding mechanism not implemented")
 
+        ##############################
+        ### Tracking within lesion ###
+        ##############################
+        # TODO: Compute the average number of streamlines in the healthy pool --> Save output to txt file 
+        # Include the results for each healthy subject. The average is computed in the last line and then read accordingly.
+        num_streams_lesion = inter_dir+'lesion_streamlines.txt'
+
         ### Run tractography through lesion without ACT ###
         oedema_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_lesion.tck'
-        oedema_tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_lesion_SIFT.tck'
-        if skip and os.path.exists(oedema_tck_sift):
-            logging.info(" " + subject_ID + " in " + session + " SIFT lesion tractogram already available... skiping")
+        if skip and os.path.exists(oedema_tck_file):
+            logging.info(" " + subject_ID + " in " + session + " Lesion tractogram already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating and filtering tractogram through lesion")
             # We use the merged fod files to capture tracts that pass through the lesion
             # We seed only inside the lesion
-            # We filter with fODFs from all over the brain without a fixed number of final streams
-            os.system(f"tckgen -algorithm iFOD2 {oedema_tck_seeding} -backtrack -select {t_config['streams']} \
-                -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
+            os.system(f"tckgen -algorithm iFOD2 {oedema_tck_seeding} -backtrack -select {t_config['filtered']} \
+                -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
                 -fslgrad {bvec_dwi} {bval_dwi} -mask {whole_t1_mask} -cutoff {config['trac']['cutoff']} \
                 -force -quiet  {wm_merged} {oedema_tck_file}")    
-            os.system(f"tcksift {oedema_tck_file} {wm_merged} {oedema_tck_sift} -act {act_5tt_seg_pathological} -force -quiet ") 
-
+        
+        ### SIF2 to match the lesion underlying diffusion signal ###
+        oedema_weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '.txt'
+        if skip and os.path.exists(oedema_weights_sift):
+            logging.info(" " + subject_ID + " in " + session + " Filtered tractogram already available... skiping")
+        else:
+            logging.info(" " + subject_ID + " in " + session + " Filtering tractogram")
+            # We filter with fODFs from the lesion area 
+            os.system(f"tcksift2 {oedema_tck_file} {oedema_wm_norm} {oedema_weights_sift} -fd_scale_gm \
+                    -reg_tikhonov {t_config['sift2_tikhonov']} -reg_tv {t_config['sift2_tv']} -force -quiet")
+        
+        ###############################
+        ### Tracking without lesion ###
+        ###############################
         ### Run tractography outside lesion with ACT ###
         healthy_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_healthy.tck'
-        healthy_tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_healthy_SIFT' + t_config['filtered'] + '.tck'
-        if skip and os.path.exists(healthy_tck_sift):
-            logging.info(" " + subject_ID + " in " + session + " SIFT healthy tractogram already available... skiping")
+        if skip and os.path.exists(healthy_tck_file):
+            logging.info(" " + subject_ID + " in " + session + " Healthy tractogram already available... skiping")
         else:
-            logging.info(" " + subject_ID + " in " + session + " Generating and filtering tractogram outside lesion")
-            # We use thefod file made outside the lesion
+            logging.info(" " + subject_ID + " in " + session + " Generating tractogram outside lesion")
+            # We use the FOD file made outside the lesion
             # We seed only outside the lesion
             # We filter only with fODFs outside the lesion
             os.system(f"tckgen -algorithm iFOD2 -act {act_5tt_seg} {healthy_tck_seeding} -backtrack -select {t_config['streams']} \
                     -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
                     -fslgrad {bvec_dwi} {bval_dwi} -cutoff {2*float(config['trac']['cutoff'])} -force -quiet  {wm_norm} {healthy_tck_file}")
-            if t_config['filtered'] == "":
-                os.system(f"tcksift {healthy_tck_file} {wm_norm} {healthy_tck_sift} -act {act_5tt_seg} -force -quiet ")
-            else:
-                filtered = int(int(t_config['streams'])*float(t_config['filtered'])/100)
-                os.system(f"tcksift {healthy_tck_file} {wm_norm} {healthy_tck_sift} -act {act_5tt_seg} -term_number {filtered} -force -quiet ")
-
-        ### Merge tractograms and filter them to avoid innecessary repetitions ###
-        merged_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '.tck'
-        merged_tck_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT' + t_config['filtered'] + '.tck'
-        if skip and os.path.exists(merged_tck_sift):
-            logging.info(" " + subject_ID + " in " + session + " SIFT merged tractogram already available... skiping")
+            
+        ### SIFT2 to match the healthy underlying diffusion signal ###
+        healthy_weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '.txt'
+        if skip and os.path.exists(healthy_weights_sift):
+            logging.info(" " + subject_ID + " in " + session + " Filtered tractogram already available... skiping")
         else:
-            logging.info(" " + subject_ID + " in " + session + " Merging and filtering tractogram")
-            # We filter the merged UNFILTERED tractograms with the whole brain fODFs
-            os.system(f"tckedit {healthy_tck_file} {oedema_tck_file} {merged_tck_file} -force -quiet")    
-            if t_config['filtered'] == "":
-                os.system(f"tcksift {merged_tck_file} {wm_merged} {merged_tck_sift} -act {act_5tt_seg_pathological} -force -quiet ")
-            else:
-                filtered = int(int(t_config['streams'])*float(t_config['filtered'])/100)
-                os.system(f"tcksift {merged_tck_file} {wm_merged} {merged_tck_sift} -act {act_5tt_seg_pathological} -term_number {filtered} -force -quiet ")  
+            logging.info(" " + subject_ID + " in " + session + " Filtering tractogram")
+            os.system(f"tcksift2 {healthy_tck_file} {wm_norm} {healthy_weights_sift} -act {act_5tt_seg} -fd_scale_gm \
+                    -reg_tikhonov {t_config['sift2_tikhonov']} -reg_tv {t_config['sift2_tv']} -force -quiet")
 
+        # To .trk format
         if t_config['save_trk']:
             logging.info(" " + subject_ID + " in " + session + " Converting to .trk")
-            tck2trk(nii_t1, healthy_tck_sift)
-            tck2trk(nii_t1, oedema_tck_sift)
-            tck2trk(nii_t1, merged_tck_sift)
+            tck2trk(nii_t1, healthy_tck_file)
+            tck2trk(nii_t1, oedema_tck_file)
 
+        ###########################################
+        ### Merging strategies and connectomics ###
+        ###########################################
         ### Generate Connectomes ###
         healthy_cm_file = output_dir + subject_ID + '_' + session + '_healthy_CM.csv'
         healthy_cm2tck = output_dir + subject_ID + '_' + session + '_healthy_cm2trac.txt'
@@ -216,24 +224,29 @@ def hybrid(config, f, acronym):
             atlas_path = config["paths"]['atlas_path']
         else:
             atlas_path = config["paths"]['atlas_path'] + subject_ID + '/' + session + '/atlas/' + subject_ID + '_' + session + '_T1w_labels.nii.gz'
+        
+        ### Healthy Connectome ###
         if skip and os.path.exists(healthy_cm_file):
             logging.info(" " + subject_ID + " in " + session + " Healthy connectome already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating healthy connectome")
-            os.system(f"tck2connectome {healthy_tck_sift} {atlas_path} {healthy_cm_file} \
+            os.system(f"tck2connectome {healthy_tck_file} {atlas_path} {healthy_cm_file} -tck_weights_in {healthy_weights_sift} \
                         -symmetric -zero_diagonal -out_assignments {healthy_cm2tck} -force -quiet ")
+        ### Lesion Connectome ###
         if skip and os.path.exists(oedema_cm_file):
             logging.info(" " + subject_ID + " in " + session + " Lesion connectome already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating lesion connectome")
-            os.system(f"tck2connectome {oedema_tck_sift} {atlas_path} {oedema_cm_file} \
+            os.system(f"tck2connectome {oedema_tck_file} {atlas_path} {oedema_cm_file} -tck_weights_in {oedema_weights_sift} \
                         -symmetric -zero_diagonal -out_assignments {oedema_cm2tck} -force -quiet ")
+        ### Merging Connectomes ###
         if skip and os.path.exists(merged_cm_file):
             logging.info(" " + subject_ID + " in " + session + " Merged connectome already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating merged connectome")
-            os.system(f"tck2connectome {merged_tck_sift} {atlas_path} {merged_cm_file} \
-                        -symmetric -zero_diagonal -out_assignments {merged_cm2tck} -force -quiet ")
+            # TODO: Matrix merging strategy
+                # 1. Greedy approach
+                # 2. Another alternative? Difficult to justify
 
         ### Structural connectivity stats ###
         if skip and os.path.exists(output_dir + '_' + subject_ID + session + '.png'):
@@ -255,12 +268,10 @@ def hybrid(config, f, acronym):
             os.remove(healthy_tck_file)
         if not t_config["keep_full_tck"] and os.path.exists(oedema_tck_file):
             os.remove(oedema_tck_file)
-        if not t_config["keep_full_tck"] and os.path.exists(merged_tck_file):
-            os.remove(merged_tck_file)
 
         ### Remove intermediates ###
         if config["delete"]["response_funcs"]:
-            os.system(f"rm {wm_res} {gm_res} {csf_res} {vox} {oedema_wm_res} {oedema_gm_res} {oedema_csf_res} {oedema_vox}")
+            os.system(f"rm {wm_res} {gm_res} {csf_res} {vox} {oedema_wm_res} {oedema_gm_res} {oedema_csf_res}")
         if config["delete"]["fODFs"]:
             os.system(f"rm {wm_fod} {gm_fod} {csf_fod} {gm_norm} {csf_norm} \
                 {oedema_wm_fod} {oedema_gm_fod} {oedema_csf_fod} {oedema_gm_norm} {oedema_csf_norm}")
