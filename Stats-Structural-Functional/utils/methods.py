@@ -78,7 +78,7 @@ def FFT_sampling_points (delta_t, length=180, bin1=2.4, bin2=2.1, eps=0.0001):
 
 def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
         CONTROL_paired, C_subjects_paired, CONTROL_unpaired, C_subjects_unpaired, 
-        PATIENT_paired, P_subjects_paired, PATIENT_unpaired, P_subjects_unpaired, sum_name):
+        PATIENT_paired, P_subjects_paired, PATIENT_unpaired, P_subjects_unpaired, sum_name, tissue='tumor'):
     # Load patient data
     if ii >= len(P_subjects_paired):
         subject, file = P_subjects_unpaired[ii-len(P_subjects_paired)], PATIENT_unpaired[ii-len(P_subjects_paired)]  
@@ -94,7 +94,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
     results_patients = pd.DataFrame(columns=['Subject', 'Total power', 'Power per bin (%)', 'Cumulative Power (%)', 'Oedema BOLD signal', 'time (s)'])
     print(f"Analysing {subject} in {session}")
 
-    lesion_name = f"./Data/structural/images/{session}/lesion_MNI_{session}_3mm/{subject}_{session}_T1w_tumor_3mm.nii.gz"
+    lesion_name = f"../Data/structural/images/ses-preop/lesion_MNI_ses-preop_3mm/{subject}_ses-preop_T1w_{tissue}_3mm.nii.gz"
     try:
         # Load lesion
         lesion = nib.load(lesion_name)
@@ -103,7 +103,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
         # Patient Voxel_wise mean-temporal BOLD
         masked_bold = bold * oedema
     except:
-        name = f"./Data/structural/images/{session}/lesion_MNI_{session}_3mm/regridded_tumor.nii.gz"
+        name = f"../Data/structural/images/ses-preop/lesion_MNI_ses-preop_3mm/regridded_tumor.nii.gz"
         os.system(f"mrgrid {lesion_name} regrid {name} -size {dim1},{dim2},{dim3} -force -quiet")# Load lesion
         lesion = nib.load(name)
         oedema = np.repeat(lesion.get_fdata()[:,:,:,np.newaxis], bold.shape[3], axis=3)
@@ -159,7 +159,7 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
             healthy_bold = healthy.get_fdata()
             masked_bold_healthy = healthy_bold * oedema
         except:
-            name = f'./Data/functional/images/control/{session}/regridded.nii.gz'
+            name = f'../Data/functional/images/control/{session}/regridded.nii.gz'
             os.system(f"mrgrid {C_fi} regrid {name} -size {dim1},{dim2},{dim3} -force -quiet")
             healthy = nib.load(name)
             healthy_bold = healthy.get_fdata()    
@@ -197,20 +197,20 @@ def Power_Analysis_Oedema_vs_Healthy(ii, Nc, session, subject_niftis_path,
         results_patients.loc[len(results_patients.index)] = [C_subject, Full_H_power[i], bin_H_power[i,:], H_power[i,:], mean_control[i,...], time_axis_H[-1]]
     results_patients.to_csv(sum_name, sep='\t', index=False)
 
-def DMN_overlap(subject, session, mm='3'):
+def DMN_overlap(subject, session, mm='3', tissue='tumor'):
     # Overlap
-    DMN_img = nib.load(f"./Data/atlas/DMN_{mm}{mm}{mm}mm.nii")
+    DMN_img = nib.load(f"../Data/atlas/DMN_{mm}{mm}{mm}mm.nii")
     DMN = DMN_img.get_fdata()
     DMN = DMN[...,0] if len(DMN.shape)==4 else DMN
-    lesion_img = nib.load(f"./Data/structural/images/{session}/lesion_MNI_{session}_{mm}mm/{subject}_{session}_T1w_tumor_{mm}mm.nii.gz")
+    lesion_img = nib.load(f"../Data/structural/images/ses-preop/lesion_MNI_ses-preop_{mm}mm/{subject}_ses-preop_T1w_{tissue}_{mm}mm.nii.gz")
     lesion, affine = lesion_img.get_fdata(), lesion_img.affine
     overlap_image = np.where(DMN * lesion >= 0.01, 1, 0)
     overlap = np.sum(overlap_image)/np.sum(np.where(DMN >= 0.01, 1, 0))
-    name = f'./RESULTS/figures/functional/{session}/{subject}/niftis/DMN_overlap.nii.gz'
+    name = f'../RESULTS/figures/functional/{session}/{subject}/niftis/DMN_overlap.nii.gz'
     nib.save(nib.Nifti1Image(overlap_image, DMN_img.affine, DMN_img.header), name)
 
     # Euclidean distance
-    cm_DMN = np.load('./Data/atlas/DMN_Centroids.npy') # In MNI space coordinates
+    cm_DMN = np.load('../Data/atlas/DMN_Centroids.npy') # In MNI space coordinates
     cm_lesion = np.append(ndimage.center_of_mass(lesion), 1) # In voxel space (i.e., computed as voxel coordinates)
     cm_lesion_MNI = np.tile((affine @ cm_lesion)[:-1], (cm_DMN.shape[0],1)) # From voxel to MNI space - repeat for each DMN region
     E_distance = np.linalg.norm(cm_lesion_MNI-cm_DMN, axis=1) # Euclidean distance
@@ -218,16 +218,16 @@ def DMN_overlap(subject, session, mm='3'):
     
 def BOLD_DMN(subject, session, path, mm='3', type_subject='healthy'):
     # DMN labels
-    dmn = nib.load(f"./Data/atlas/DMN_{mm}{mm}{mm}mm.nii")
+    dmn = nib.load(f"../Data/atlas/DMN_{mm}{mm}{mm}mm.nii")
     dmn_data = dmn.get_fdata()
     dmn_labels = np.unique(dmn_data[np.nonzero(dmn_data)])
 
     # Healthy BOLD
     if type_subject == 'healthy':
-        healthy = nib.load(f"./Data/functional/images/control/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
+        healthy = nib.load(f"../Data/functional/images/control/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
         bold = healthy.get_fdata()
     elif type_subject == 'patient':
-        healthy = nib.load(f"./Data/functional/images/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
+        healthy = nib.load(f"../Data/functional/images/{session}/{subject}_{session}_task-rest_bold_residual.nii.gz")
         bold = healthy.get_fdata()
     else:
         pass

@@ -76,7 +76,7 @@ def Power_Analysis_Figures(
         H_power, bin_H_power, Full_H_power, 
         P_power, bin_P_power, Full_Power_P, 
         mean_control, mean_patient, time_axis_H, time_axis_P,
-        Nc, subject, session, info, subject_figures_path, fig_fmt="png"
+        Nc, subject, session, info, subject_figures_path, fig_fmt="png", tissue='Whole Tumor'
     ):
 
     _, p = ttest_1samp(Full_H_power, Full_Power_P, alternative='two-sided')
@@ -141,7 +141,7 @@ def Power_Analysis_Figures(
         ax.plot(mean_control[c,:], color='black', linewidth=1, alpha=0.3)
     ax.set_ylabel("BOLD", fontsize=14), ax.set_xlabel("time ($\Delta t$)", fontsize=10)
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False)
-    ax.set_title("Whole Tumor Signal", fontsize=14)
+    ax.set_title(f"{tissue} Signal", fontsize=14)
     plt.savefig(subject_figures_path+subject+f'_{session}_BOLD-signal_oedema.'+fig_fmt, dpi=1000)
     plt.close()
 
@@ -221,7 +221,7 @@ def BOLD_DMN_regions(bold_signals, time_axis, labels, name, communities, fig_fmt
     ax[-1].spines['right'].set_visible(False), ax[-1].spines['top'].set_visible(False)
     ax[-1].spines['bottom'].set_visible(False), ax[-1].spines['left'].set_visible(False)
     ax[-1].set_yticks([]), ax[-1].set_xticks([])
-    plt.savefig(name.split('.')[0]+'-ACF.'+fig_fmt, dpi=1000)
+    plt.savefig(".."+name.split('.')[-2]+'-ACF.'+fig_fmt, dpi=1000)
     plt.close()
 
     return acf, p_val
@@ -393,7 +393,7 @@ def group_analysis(
     distance, richness_change, dynamic_oedema_change_or,
     Nc, Np, session,
     power_change, healthy_power, 
-    tumor_type, tumor_size, tumor_ventr, tumor_loc, tumor_grade, fig_fmt="png"
+    tumor_type, tumor_size, tumor_ventr, tumor_loc, tumor_grade, fig_fmt="png", tissue='Whole Tumor'
     ):
     # Wee keep the original direction of DAS
     dynamic_change_or = np.copy(dynamic_change) 
@@ -544,7 +544,7 @@ def group_analysis(
     ax[3].text(-35,40,f"r = {round(r_dyn_dyn,3)} \np{plot_pval}", fontweight="bold", color="salmon")
     ax[3].spines['right'].set_visible(False), ax[3].spines['top'].set_visible(False)
     ax[3].set_xlim([-40,45]), ax[3].set_ylim([-40,55])
-    ax[3].set_ylabel('DAS (Whole Tumor)'), ax[3].set_xlabel("DAS (DMN)")
+    ax[3].set_ylabel(f'DAS ({tissue})'), ax[3].set_xlabel("DAS (DMN)")
     print(f"Correlation DAS (DMN vs Tumor): r={r_dyn_dyn}, p={p_dyn_dyn} __ two-tailed")
     print(f"Correlation |DAS| (DMN vs Tumor): r={r_dyn_dyn_abs}, p={p_dyn_dyn_abs} __ two-tailed")
     print("---------------")
@@ -726,6 +726,6 @@ def group_analysis(
     inset.set_xlabel("$\Delta$DAS (Oedema)"), inset.set_yticks([1.15,2.05]), inset.set_yticklabels(["Meningioma", "Glioma"], rotation = 90)
     inset.set_ylim([0.8,2.2]), inset.yaxis.set_ticks_position('none')"""
 
-    plt.savefig(f"RESULTS/figures/functional/{session}/global-analysis_{session}."+fig_fmt, dpi=1000)
+    plt.savefig(f"../RESULTS/figures/functional/{session}/global-analysis_{session}."+fig_fmt, dpi=1000)
     plt.close()
 

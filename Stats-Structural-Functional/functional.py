@@ -14,7 +14,14 @@ from gradients import *
 parser = argparse.ArgumentParser(description='Analysis of BOLD signals in Oedemas from brain tumors')
 parser.add_argument('--sessions', type=str, default='ses-preop', help='Session to analyze. * for all sessions. Input as comma separated list.')
 parser.add_argument('--figures', type=str, default='false', help='Make figures of results')
+parser.add_argument('--lesion_tissue', type=str, choices={'tumor','necrotic','non-necrotic'}, default='tumor', help="Type of lesioned tissue to analyse for patients with glioma-like type of tumor.")
 args = parser.parse_args()
+if args.lesion_tissue == 'tumor':
+    tissue_label = 'Whole Tumor'
+elif args.lesion_tissue == 'necrotic':
+    tissue_label = 'Tumor core'
+else:
+    tissue_label = 'Non-Necrotic Tissue'
 
 if __name__ == '__main__':
     figs = True if args.figures.lower()=='true' else False
@@ -28,7 +35,7 @@ if __name__ == '__main__':
     ######################
     ### Tumor Features ###
     ######################
-    info = pd.read_csv('Data/participants.tsv', sep='\t')
+    info = pd.read_csv('../Data/participants.tsv', sep='\t')
     info = info[info["participant_id"].str.contains("CON") == False]
     info.set_index(info.participant_id, inplace=True)
     info.drop(['participant_id'], axis=1, inplace=True)
@@ -43,7 +50,7 @@ if __name__ == '__main__':
     tumor_locs_unpaired = np.array([1 if 'Frontal' in dict(info["tumor location"])[k] else 2 for k in P_subjects_unpaired])
     tumor_grade_unpaired = np.array([2 if 'II' in dict(info["tumor type & grade"])[k] else 1 for k in P_subjects_unpaired])
     tumor_ventricles_unpaired = np.array([2 if 'yes' in dict(info["ventricles"])[k] else 1 for k in P_subjects_unpaired])
-    
+
     ################
     ### Analysis ###
     ################
@@ -120,7 +127,7 @@ if __name__ == '__main__':
             else:
                 C_subject = C_subjects_paired[i] 
 
-            C_path = check_path(f"RESULTS/numerical/functional/control/{session}/{C_subject}/")
+            C_path = check_path(f"../RESULTS/numerical/functional/control/{session}/{C_subject}/")
             DMN_healthy_name = C_path+f"{C_subject}_{session}_DMN-region_BOLD.tsv"
             if not os.path.exists(DMN_healthy_name):
                 print(f"{C_subject} in {session} writing {DMN_healthy_name}")
@@ -133,7 +140,7 @@ if __name__ == '__main__':
                 DMN_Complexity_healthy_pre[i] = complexity(DMN_CorrNet_healthy_pre[i], bins=15)   
 
                 if figs:
-                    C_path = check_path(f"RESULTS/figures/functional/control/{session}/{C_subject}/")
+                    C_path = check_path(f"../RESULTS/figures/functional/control/{session}/{C_subject}/")
                     png_name = C_path + f"{C_subject}_{session}_DMN-region-BOLD."+fig_fmt
                     DMN_regions_healthy_ACF_pre[i], DMN_regions_healthy_ACF_pval_pre[i] = BOLD_DMN_regions(DMN_region_bold_healthy_pre[i], dmn_region_time, DMN_regions_healthy_pre[i], png_name, cms)
                     print(f"{C_subject}_{session} DMN ready")
@@ -145,7 +152,7 @@ if __name__ == '__main__':
                 DMN_Complexity_healthy_post[i] = complexity(DMN_CorrNet_healthy_post[i], bins=15)  
 
                 if figs:
-                    C_path = check_path(f"RESULTS/figures/functional/control/{session}/{C_subject}/")
+                    C_path = check_path(f"../RESULTS/figures/functional/control/{session}/{C_subject}/")
                     png_name = C_path + f"{C_subject}_{session}_DMN-region-BOLD."+fig_fmt
                     DMN_regions_healthy_ACF_post[i], DMN_regions_healthy_ACF_pval_post[i] = BOLD_DMN_regions(DMN_region_bold_healthy_post[i], dmn_region_time, DMN_regions_healthy_post[i], png_name, cms)
                     print(f"{C_subject}_{session} DMN ready")
@@ -159,13 +166,17 @@ if __name__ == '__main__':
             if pat >= len(P_subjects_paired):
                 # This setting ensures that the unpaired subjects are at the end
                 subject = P_subjects_unpaired[pat-len(P_subjects_paired)]
+                # If meningioma we consider the whole tumor instead (see line 44)
+                C_tumor = args.lesion_tissue if tumor_types_unpaired[pat-len(P_subjects_paired)]==2 else 'tumor' 
             else:
                 subject = P_subjects_paired[pat]  
+                # If meningioma we consider the whole tumor instead (see line 44)
+                C_tumor = args.lesion_tissue if tumor_types[pat]==2 else 'tumor' 
 
             ### PATIENT OUTPUT DIRECTORIES ###
-            subject_results_path = check_path(f"RESULTS/numerical/functional/{session}/{subject}/")
-            subject_figures_path = check_path(f"RESULTS/figures/functional/{session}/{subject}/figs/")
-            subject_niftis_path = check_path(f"RESULTS/figures/functional/{session}/{subject}/niftis/")
+            subject_results_path = check_path(f"../RESULTS/numerical/functional/{session}/{subject}/")
+            subject_figures_path = check_path(f"../RESULTS/figures/functional/{session}/{subject}/figs/")
+            subject_niftis_path = check_path(f"../RESULTS/figures/functional/{session}/{subject}/niftis/")
 
             ### PATIENT Default Mode Network ###
             DMN_patient_name = subject_results_path+f'{subject}_{session}_DMN-region_BOLD.tsv'
@@ -180,7 +191,7 @@ if __name__ == '__main__':
                 print(f"{subject} in {session} writing {Oedema_Patient_name}")
                 Power_Analysis_Oedema_vs_Healthy(pat, Nc, session, subject_niftis_path,
                         CONTROL_paired, C_subjects_paired, CONTROL_unpaired, C_subjects_unpaired, 
-                        PATIENT_paired, P_subjects_paired, PATIENT_unpaired, P_subjects_unpaired, Oedema_Patient_name)  
+                        PATIENT_paired, P_subjects_paired, PATIENT_unpaired, P_subjects_unpaired, Oedema_Patient_name, tissue=C_tumor)  
             print(f"{subject} in {session} Oedema signal done")
 
             ### LOADING AND PLOTTING RESULTS ###
@@ -189,7 +200,7 @@ if __name__ == '__main__':
                 DMN_region_bold_patient_pre[pat], dmn_region_time, DMN_region_power_T_patient_pre[pat], DMN_region_power_cum_patient_pre[pat], \
                     DMN_region_power_bin_patient_pre[pat], cms, DMN_regions_patient_pre[pat], DMN_CorrNet_patient_pre[pat] = read_DMN_summary(DMN_patient_name)
                 communities_patient_pre.append(cms)        
-                DMN_lesion_overlap_pre[pat], DMN_lesion_distance_pre[pat] = DMN_overlap(subject, session)     
+                DMN_lesion_overlap_pre[pat], DMN_lesion_distance_pre[pat] = DMN_overlap(subject, session, tissue=C_tumor)     
                 DMN_pcc_sim_pre[pat,:] = np.array([pcc(DMN_CorrNet_patient_pre[pat], DMN_CorrNet_healthy_pre[c]) for c in range(Nc)])
                 DMN_mse_sim_pre[pat,:] = np.array([mse(DMN_CorrNet_patient_pre[pat], DMN_CorrNet_healthy_pre[c]) for c in range(Nc)])
                 DMN_Complexity_patient_pre[pat] = complexity(DMN_CorrNet_patient_pre[pat], bins=15)
@@ -234,7 +245,7 @@ if __name__ == '__main__':
                         Cum_Power_Healthy_pre[pat], Bin_Power_Healthy_pre[pat], Total_Power_Healthy_pre[pat], 
                         Cum_Power_Patients_pre[pat], Bin_Power_Patients_pre[pat], Total_Power_Patients_pre[pat], 
                         BOLD_oedema_Healthy_pre[pat], BOLD_oedema_Patient_pre[pat], time_series_Healthy_pre[pat], time_series_Patient_pre[pat],
-                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt
+                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt, tissue=tissue_label
                     )  
                     print(f"{subject}_{session} Oedema ready")
             else:
@@ -287,17 +298,17 @@ if __name__ == '__main__':
                         Cum_Power_Healthy_post[pat], Bin_Power_Healthy_post[pat], Total_Power_Healthy_post[pat], 
                         Cum_Power_Patients_post[pat], Bin_Power_Patients_post[pat], Total_Power_Patients_post[pat], 
                         BOLD_oedema_Healthy_post[pat], BOLD_oedema_Patient_post[pat], time_series_Healthy_post[pat], time_series_Patient_post[pat],
-                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt
+                        Nc, subject, session, info, subject_figures_path, fig_fmt=fig_fmt, tissue=tissue_label
                     )
                     print(f"{subject}_{session} Oedema ready")
     try:
-        DAS_Oedema_pre.to_csv("RESULTS/numerical/functional/ses-preop/DAS_Oedema_pre.tsv", sep='\t', index=False)
-        DAS_DMN_pre.to_csv("RESULTS/numerical/functional/ses-preop/DAS_DMN_pre.tsv", sep='\t', index=False)
+        DAS_Oedema_pre.to_csv("../RESULTS/numerical/functional/ses-preop/DAS_Oedema_pre.tsv", sep='\t', index=False)
+        DAS_DMN_pre.to_csv("../RESULTS/numerical/functional/ses-preop/DAS_DMN_pre.tsv", sep='\t', index=False)
     except:
         pass
     try:
-        DAS_Oedema_post.to_csv("RESULTS/numerical/functional/ses-postop/DAS_Oedema_post.tsv", sep='\t', index=False)
-        DAS_DMN_post.to_csv("RESULTS/numerical/functional/ses-preop/DAS_DMN_post.tsv", sep='\t', index=False)
+        DAS_Oedema_post.to_csv("../RESULTS/numerical/functional/ses-postop/DAS_Oedema_post.tsv", sep='\t', index=False)
+        DAS_DMN_post.to_csv("../RESULTS/numerical/functional/ses-preop/DAS_DMN_post.tsv", sep='\t', index=False)
     except:
         pass
 
@@ -336,21 +347,8 @@ if __name__ == '__main__':
         np.concatenate((tumor_sizes,tumor_sizes_unpaired)), 
         np.concatenate((tumor_ventricles,tumor_ventricles_unpaired)),
         np.concatenate((tumor_locs,tumor_locs_unpaired)),
-        np.concatenate((tumor_grade,tumor_grade_unpaired)), fig_fmt="svg"
+        np.concatenate((tumor_grade,tumor_grade_unpaired)), fig_fmt="svg", tissue=tissue_label
     )
-    '''
-    group_analysis(
-        DMN_dynamic_change_pre, DMN_pcc_sim_pre, DMN_lesion_overlap_pre,
-        DMN_lesion_distance_pre, DMN_Richness_change_pre, Relative_dynamics_pre,
-        Nc, Np, 'ses-preop',
-        Oedema_T_power_change_pre, Total_Power_Healthy_pre,
-        np.concatenate((tumor_types,tumor_types_unpaired)),
-        np.concatenate((tumor_sizes,tumor_sizes_unpaired)), 
-        np.concatenate((tumor_ventricles,tumor_ventricles_unpaired)),
-        np.concatenate((tumor_locs,tumor_locs_unpaired)),
-        np.concatenate((tumor_grade,tumor_grade_unpaired)), fig_fmt="png"
-    )
-    '''
 
     """ ############################
     ### Functional gradients ###
@@ -359,8 +357,8 @@ if __name__ == '__main__':
     print("Computing Functional Gradients")
     g_rois, Nnets = 100, 17
     parcellation = "./datasets/atlas/Schaefer2018_"+str(g_rois)+"Parcels_"+str(Nnets)+"Networks_order_FSLMNI152_1mm.nii.gz"
-    DAS_file = "RESULTS/numerical/functional/ses-preop/DAS_DMN_pre.tsv"
+    DAS_file = "../RESULTS/numerical/functional/ses-preop/DAS_DMN_pre.tsv"
     # Find more parcellations here: 
     # https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI
-    plot_gradients("./datasets/functional_2/images/", "RESULTS/figures/functional/", 
+    plot_gradients("./datasets/functional_2/images/", "../RESULTS/figures/functional/", 
             parcellation, DAS_file, g_rois) """
