@@ -30,6 +30,13 @@ def hybrid(config, f, acronym):
     if re.findall('...[0-9]+',subject_ID)[0] in skip_subjects:
         logging.info(" Skipping " + subject_ID + session)
     else: 
+        #### Temporal location
+        num_streams_lesion = inter_dir+subject_ID+'-lesion_streamlines.txt'
+        streams_lesion = extract_healthy_streamlines_from_lesion(
+            config["shell"]["healthy_dir"], tumor_t1, num_streams_lesion, subject_ID
+        )
+        quit()
+
         ### Bias field homogeneities ###
         nii_dwi_bc = inter_dir+subject_ID+'_dwi_bc.mif'
         if skip and os.path.exists(nii_dwi_bc):

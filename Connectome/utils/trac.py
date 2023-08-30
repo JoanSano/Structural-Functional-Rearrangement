@@ -2,6 +2,8 @@ import nibabel as nib
 from nibabel.streamlines import Field
 from nibabel.orientations import aff2axcodes
 import os
+import glob
+import numpy as np
 
 def tck2trk(anatomical, trac_file):
     """
@@ -103,25 +105,57 @@ def extract_response_shell(response_1, new_response_1,
     with open(new_response_3, 'w') as f:
         f.writelines(extract_tissue_response_shell(response_3, config_shell))
 
-def extract_healthy_streamlines_from_lesion():
-    # TODO
-    pass
-
-def compute_lesion_streamlines(number_file):
+def extract_healthy_streamlines_from_lesion(healthy_dir, lesion, output_file, subjec_ID):
     """
-    number_file: txt file containing the number of streamlines emerging a given lesion. The
-        structure of the data is as follows __
-            # Patient:\t sub-PATXX
-            # Healthy-subjects:\t YY
+    Inputs
+    --------
+    healthy_dir: Directory where the healthy pool is located. The tractograms need be
+        named according to BIDS format (e.g., sub-CONXX_ses-YY_extra-arguments.tck) 
+        together with the .tck format extension
+    lesion: NIFTI image containing the lesion mask. Needles to say that it needs to be
+        corregistered with the same template as the healthy cohort
+    subject_ID: ID of the patient. Only for summary purposes on the output file
+    output_file: txt file containing the number of streamlines emerging a given lesion. The
+        structure of the data is as follows:
+            # Patient:\tsub-PATXX
+            # Healthy-subjects:\tYY
             # --------------------
-            sub-CON01:\t 350909
+            sub-CON01_ses-preop:\t350909
             ...
-            sub-CONZZ:\t 675648
-            Lesion:\t THE AVERAGE OF ALL PREVIOUS ENTRIES
+            sub-CONZZ_ses-RRRRR:\t675648
+            Lesion:\tTHE AVERAGE OF ALL PREVIOUS ENTRIES
+            
+    Returns
+    --------
+    returns the average number of streamlines that emerge from the lesion with respect to the
+        healthy pool of subjects
     """
-    with open(number_file, 'r') as f:
-        numbers = f.readlines()
-    return numbers[-1].strip().split("\t")
+
+    tract_files = glob.glob(f"{healthy_dir}/**/*.tck", recursive=True)
+    lines = [
+        f"# Patient:\t{subjec_ID}\n",
+        f"# Healthy-subjects:\t{len(tract_files)}\n",
+        f"# ---------------------"
+    ]
+    np.random.seed(int(subjec_ID[-2:]))
+    file_ID = "./ignore_"+str(np.random.randint(0,50))+"-"+str(np.random.randint(0,50))+"-"+str(np.random.randint(0,50))+"-"+str(np.random.randint(0,50))
+    average = 0
+    f = open(output_file, 'w')
+    f.writelines(lines)
+    for i,tract in enumerate(tract_files):
+        ID = "_".join(tract.split("/")[-1].split("_")[:-1])
+        f.writelines(f"\n{ID}:\t")
+        os.system(f"tckedit {tract} {file_ID}.tck -include {lesion} -quiet -force")
+        os.system(f"tckstats -output count {file_ID}.tck -quiet > {file_ID}.txt")
+        with open(f"{file_ID}.txt", 'r') as g:
+            streams = g.readlines()[0]
+        f.writelines(f"{streams}")
+        average = int(streams) + average
+    average = average/len(tract_files)
+    f.writelines(f"\nAverage-number:\t{average}")
+    f.close()
+    os.system(f"rm {file_ID}.tck {file_ID}.txt")
+    return round(average)
 
 if __name__ == '__main__':
     # Convert single tck file
