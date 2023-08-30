@@ -6,8 +6,8 @@ paths:
   # If null, then output is in the 'dataset_dir'
   output_dir: "/home/hippo/Joan/Ghent-Tumor_Network-Structural/" 
 
-  session: "*preop*" # opts: "preop", "psotop" // "*" mean/s all sessions available
-  subject: "sub-PAT*" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  session: "*" # opts: "preop", "psotop" // "*" mean/s all sessions available
+  subject: "sub-PAT03" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
   skip_subjects: ""  # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###
@@ -18,7 +18,7 @@ recons: "hybrid" # opts: "MSMT-CSD", "SS3T-CSD", "hybrid"// if null: uses MSMT_C
 shell:  # Only used for single shell methods
   b_val: "2800"
   num: "4" # b=0 is shell number 1
-  healthy_dir: "/home/hippo/Joan/Ghent-Tumor_Network-Structural/Connectome-structural_FOD-msmt_Group-healthy_July-5/"
+  healthy_dir: "/home/hippo/Joan/Ghent-Tumor_Network-Structural/Connectome-Structural_FOD-msmt_Group-healthy_July-5/"
 
 ### TRACTOGRAPHY OPTIONS ###
 trac:

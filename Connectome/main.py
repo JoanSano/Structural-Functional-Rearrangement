@@ -9,12 +9,14 @@ from utils.paths import check_path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--folder', type=str, default='', help='Output folder name. Default contains the date and time of the execution.')
-parser.add_argument('--configuration', type=bool, default=True, help='Save configuration file to output directory.')
+parser.add_argument('--configuration', type=str, default=".", help='Path to the config file specifications.')
+parser.add_argument('--overwrite_config', action="store_true", help="Overwrite configuration file.")
 opts = parser.parse_args()
 
 if __name__ == '__main__':
     ### Open and copy config file - Set the output directory ###
-    with open('config.yaml', 'r') as f:
+    config_file = opts.configuration + "/config.yaml"
+    with open(config_file, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     x = datetime.now()
     if opts.folder == '':
@@ -26,7 +28,7 @@ if __name__ == '__main__':
     else:
         common_output = check_path(config['paths']['dataset_dir'] + acronym)
 
-    if opts.configuration:
+    if opts.overwrite_config:
         shutil.copyfile('config.yaml', common_output+'config.yaml')
 
     ### Load info ###
