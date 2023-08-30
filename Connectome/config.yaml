@@ -1,13 +1,13 @@
 ### RELEVANT PATHS TO CREATE THE CONNECTOME ###
 paths:  
-  dataset_dir: "/home/hippo/Joan/Glioma_Gent_AAL3_CoRegis/derivatives/co-registered/"
-  atlas_path: "/home/hippo/Joan/Utils/AAL3/AAL3v1_1mm.nii.gz"
+  dataset_dir: "/home/joanfr/Documents/Data-Tumor/"
+  atlas_path: "/home/joanfr/Documents/Utils/AAL3/AAL3v1_1mm.nii.gz"
   
   # If null, then output is in the 'dataset_dir'
-  output_dir: "/home/hippo/Joan/Ghent-Tumor_Network-Structural/" 
+  output_dir: "/home/joanfr/Documents/" 
 
-  session: "*" # opts: "preop", "psotop" // "*" mean/s all sessions available
-  subject: "sub-PAT03" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  session: "preop" # opts: "preop", "psotop" // "*" mean/s all sessions available
+  subject: "sub-PAT16" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
   skip_subjects: ""  # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###

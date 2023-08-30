@@ -30,13 +30,7 @@ def hybrid(config, f, acronym):
     if re.findall('...[0-9]+',subject_ID)[0] in skip_subjects:
         logging.info(" Skipping " + subject_ID + session)
     else: 
-        #### Temporal location
-        num_streams_lesion = inter_dir+subject_ID+'-lesion_streamlines.txt'
-        streams_lesion = extract_healthy_streamlines_from_lesion(
-            config["shell"]["healthy_dir"], tumor_t1, num_streams_lesion, subject_ID
-        )
-        quit()
-
+        
         ### Bias field homogeneities ###
         nii_dwi_bc = inter_dir+subject_ID+'_dwi_bc.mif'
         if skip and os.path.exists(nii_dwi_bc):
@@ -156,28 +150,39 @@ def hybrid(config, f, acronym):
         else:
             raise ValueError("Seeding mechanism not implemented")
 
+        #######################################
+        ### Obtaining number of streamlines ###
+        #######################################
+        num_streams_lesion = inter_dir+subject_ID+'_lesion-streamlines.txt'
+        if skip and os.path.exists(num_streams_lesion):
+            logging.info(" " + subject_ID + " in " + session + " Streamline counts already available... skiping")
+            streams_lesion = read_healthy_streamlines_from_lesion(num_streams_lesion)
+        else:
+            logging.info(" " + subject_ID + " in " + session + " Counting number of streamlines in the healthy cohort")
+            streams_lesion = extract_healthy_streamlines_from_lesion(
+                config["shell"]["healthy_dir"], tumor_t1, num_streams_lesion, subject_ID
+            )
+        streams_outside = str(int(float(t_config['streams'])-streams_lesion))
+        streams_lesion = str(streams_lesion)
+        
         ##############################
         ### Tracking within lesion ###
         ##############################
-        # TODO: Compute the average number of streamlines in the healthy pool --> Save output to txt file 
-        # Include the results for each healthy subject. The average is computed in the last line and then read accordingly.
-        num_streams_lesion = inter_dir+'lesion_streamlines.txt'
-
         ### Run tractography through lesion without ACT ###
-        oedema_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_lesion.tck'
+        oedema_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + streams_lesion + '_lesion.tck'
         if skip and os.path.exists(oedema_tck_file):
             logging.info(" " + subject_ID + " in " + session + " Lesion tractogram already available... skiping")
         else:
             logging.info(" " + subject_ID + " in " + session + " Generating and filtering tractogram through lesion")
             # We use the merged fod files to capture tracts that pass through the lesion
             # We seed only inside the lesion
-            os.system(f"tckgen -algorithm iFOD2 {oedema_tck_seeding} -backtrack -select {t_config['filtered']} \
+            os.system(f"tckgen -algorithm iFOD2 {oedema_tck_seeding} -backtrack -select {streams_lesion} \
                 -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
                 -fslgrad {bvec_dwi} {bval_dwi} -mask {whole_t1_mask} -cutoff {config['trac']['cutoff']} \
                 -force -quiet  {wm_merged} {oedema_tck_file}")    
         
         ### SIF2 to match the lesion underlying diffusion signal ###
-        oedema_weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '.txt'
+        oedema_weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + streams_lesion + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '_lesion.txt'
         if skip and os.path.exists(oedema_weights_sift):
             logging.info(" " + subject_ID + " in " + session + " Filtered tractogram already available... skiping")
         else:
@@ -190,7 +195,7 @@ def hybrid(config, f, acronym):
         ### Tracking without lesion ###
         ###############################
         ### Run tractography outside lesion with ACT ###
-        healthy_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_healthy.tck'
+        healthy_tck_file = output_dir + subject_ID + '_' + session + '_trac-' + streams_outside + '_healthy.tck'
         if skip and os.path.exists(healthy_tck_file):
             logging.info(" " + subject_ID + " in " + session + " Healthy tractogram already available... skiping")
         else:
@@ -198,12 +203,12 @@ def hybrid(config, f, acronym):
             # We use the FOD file made outside the lesion
             # We seed only outside the lesion
             # We filter only with fODFs outside the lesion
-            os.system(f"tckgen -algorithm iFOD2 -act {act_5tt_seg} {healthy_tck_seeding} -backtrack -select {t_config['streams']} \
+            os.system(f"tckgen -algorithm iFOD2 -act {act_5tt_seg} {healthy_tck_seeding} -backtrack -select {streams_outside} \
                     -seeds {t_config['seed_num']} -minlength {t_config['min_len']} -maxlength {t_config['max_len']} \
                     -fslgrad {bvec_dwi} {bval_dwi} -cutoff {2*float(config['trac']['cutoff'])} -force -quiet  {wm_norm} {healthy_tck_file}")
             
         ### SIFT2 to match the healthy underlying diffusion signal ###
-        healthy_weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + t_config['streams'] + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '.txt'
+        healthy_weights_sift = output_dir + subject_ID + '_' + session + '_trac-' + streams_outside + '_SIFT2-weights_tkh-' + t_config['sift2_tikhonov'] + '_tv-' + t_config['sift2_tv'] + '_healthy.txt'
         if skip and os.path.exists(healthy_weights_sift):
             logging.info(" " + subject_ID + " in " + session + " Filtered tractogram already available... skiping")
         else:

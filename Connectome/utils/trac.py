@@ -157,6 +157,11 @@ def extract_healthy_streamlines_from_lesion(healthy_dir, lesion, output_file, su
     os.system(f"rm {file_ID}.tck {file_ID}.txt")
     return round(average)
 
+def read_healthy_streamlines_from_lesion(streamline_file):
+    with open(streamline_file,'r') as f:
+        average = float(f.readlines()[-1].split("\t")[-1])
+    return round(average)
+
 if __name__ == '__main__':
     # Convert single tck file
     import argparse
