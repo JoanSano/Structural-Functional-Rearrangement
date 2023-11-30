@@ -6,6 +6,34 @@ from utils.paths import get_files, output_directory
 from utils.graph import GraphFromCSV
 from utils.trac import *
 
+def merge_connectivity(healthy_cm_file, lesion_cm_file, merged_cm_filename, strategy='greedy', sift2_weights_healthy=None, sift2_weights_lesion=None):
+    """
+    Implements a strategy to merge the connectivity matrices.
+    """
+    import numpy as np
+    import itertools
+
+    # Load matrices
+    healthy_cm = np.genfromtxt(healthy_cm_file, delimiter=',')
+    lesion_cm = np.genfromtxt(lesion_cm_file, delimiter=',')
+    
+    # Check whether matrices are mergeable
+    assert np.shape(healthy_cm) == np.shape(lesion_cm)
+    nodes = np.shape(healthy_cm)[0]
+    
+    # Implement merging strategy
+    merged_cm = np.zeros((nodes,nodes))
+    for (i,j) in itertools.product(range(nodes), repeat=2): # Iterate over edges
+        if strategy=='greedy':
+            merged_cm[i,j] = np.max([
+                healthy_cm[i,j], lesion_cm[i,j]
+            ])
+        else:
+            raise Exception('Merging strategy not implemented')
+        
+    # Save and return the file name
+    np.savetxt(merged_cm_filename, merged_cm, delimiter=',')
+
 def hybrid(config, f, acronym):
     """
     Generate the connectome for a single file using SS3T-CSD inside pathological tissue 
@@ -231,7 +259,7 @@ def hybrid(config, f, acronym):
         oedema_cm_file = output_dir + subject_ID + '_' + session + '_lesion_CM.csv'
         oedema_cm2tck = output_dir + subject_ID + '_' + session + '_lesion_cm2trac.txt'
         merged_cm_file = output_dir + subject_ID + '_' + session + '_CM.csv'
-        merged_cm2tck = output_dir + subject_ID + '_' + session + '_cm2trac.txt'
+        #merged_cm2tck = output_dir + subject_ID + '_' + session + '_cm2trac.txt'
         if config["space"] == 'MNI':
             atlas_path = config["paths"]['atlas_path']
         else:
@@ -259,6 +287,7 @@ def hybrid(config, f, acronym):
             # TODO: Matrix merging strategy
                 # 1. Greedy approach
                 # 2. Another alternative? Difficult to justify
+            merge_connectivity(healthy_cm_file, oedema_cm_file, merged_cm_file, strategy='greedy')
 
         ### Structural connectivity stats ###
         if skip and os.path.exists(output_dir + '_' + subject_ID + session + '.png'):

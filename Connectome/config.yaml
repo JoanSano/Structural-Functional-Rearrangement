@@ -4,10 +4,10 @@ paths:
   atlas_path: "/home/joanfr/Documents/Utils/AAL3/AAL3v1_1mm.nii.gz"
   
   # If null, then output is in the 'dataset_dir'
-  output_dir: "/home/joanfr/Documents/" 
+  output_dir: "/media/joanfr/T7/JoanFR_Sano/Ghent-Tumor_Network-Structural/" 
 
   session: "preop" # opts: "preop", "psotop" // "*" mean/s all sessions available
-  subject: "sub-PAT16" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  subject: "sub-PAT*" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
   skip_subjects: ""  # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###
@@ -18,7 +18,7 @@ recons: "hybrid" # opts: "MSMT-CSD", "SS3T-CSD", "hybrid"// if null: uses MSMT_C
 shell:  # Only used for single shell methods
   b_val: "2800"
   num: "4" # b=0 is shell number 1
-  healthy_dir: "/home/hippo/Joan/Ghent-Tumor_Network-Structural/Connectome-Structural_FOD-msmt_Group-healthy_July-5/"
+  healthy_dir: "/media/joanfr/T7/JoanFR_Sano/Ghent-Tumor_Network-Structural/Connectome-Structural_FOD-msmt_Group-healthy_July-5/"
 
 ### TRACTOGRAPHY OPTIONS ###
 trac:
@@ -39,10 +39,10 @@ lesion: "tumor" # This corresponds to the name of the binary mask of the lesion
 
 ### DELETE INTERMEDIATE FILEs ###
 delete: 
-  response_funcs: True
-  fODFs: True
+  response_funcs: False
+  fODFs: False
   WM_fODF: False
-  seeding_mask: True
+  seeding_mask: False
   bias_corr: False
   seg_5tt: False
   single_shells: False # Only applies to Single Shell extraction methods
@@ -53,7 +53,7 @@ delete:
 process: "multi" # [multi, single] processing of subjects
 
 ### NUMBER OF THREADS TO launch ###
-threads: "6"
+threads: "1"
 
 ### SKIP EXISTING FILES ###
 skip: True
