@@ -1,41 +1,41 @@
 ### RELEVANT PATHS TO CREATE THE CONNECTOME ###
 paths:  
-  dataset_dir: "/home/joanfr/Documents/Data-Tumor/"
-  atlas_path: "/home/joanfr/Documents/Utils/AAL3/AAL3v1_1mm.nii.gz"
+  dataset_dir: "/PATH/TO/DATA/"      # Example: "/home/joanfr/Documents/Data-Tumor/"
+  atlas_path: "/PATH/TO/LABEL/ATLAS" # Example: "/home/joanfr/Documents/Utils/AAL3/AAL3v1_1mm.nii.gz"
   
   # If null, then output is in the 'dataset_dir'
-  output_dir: "/media/joanfr/T7/JoanFR_Sano/Ghent-Tumor_Network-Structural/" 
+  output_dir: "/PATH/TO/OUTPUT" #"/media/joanfr/T7/JoanFR_Sano/Ghent-Tumor_Network-Structural/" 
 
-  session: "preop" # opts: "preop", "psotop" // "*" mean/s all sessions available
-  subject: "sub-PAT*" #"sub-PAT16"      # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
-  skip_subjects: ""  # List of subjects to skip
+  session: "preop"    # opts: "preop", "psotop" // "*" mean/s all sessions available
+  subject: "sub-PAT*" # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  skip_subjects: ""   # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###
-space: "MNI" # opts: "MNI", "dwi", "anat" 
+space: "MNI" # Options: "MNI", "dwi", "anat" 
 
 ### fODF RECONSTRUCTION METHOD TO USE ###
-recons: "hybrid" # opts: "MSMT-CSD", "SS3T-CSD", "hybrid"// if null: uses MSMT_CSD 
-shell:  # Only used for single shell methods
+recons: "hybrid" # Options: "MSMT-CSD", "SS3T-CSD", "hybrid"// if null: uses MSMT_CSD 
+shell:           # Only used for single shell methods
   b_val: "2800"
-  num: "4" # b=0 is shell number 1
+  num: "4"       # b=0 is shell number 1
   healthy_dir: "/media/joanfr/T7/JoanFR_Sano/Ghent-Tumor_Network-Structural/Connectome-Structural_FOD-msmt_Group-healthy_July-5/"
 
 ### TRACTOGRAPHY OPTIONS ###
 trac:
-  method: ACT # [ACT, Null] # Not applied when hybrid
-  cutoff: "0.08" # FOD amplitude threshold - Only used inside the patological volume of the 5TT image (5th volume)
-  seeding: "dynamic" # "gwmwi" / "random" / "dynamic"
+  method: ACT            # [ACT, Null] # Not applied when hybrid
+  cutoff: "0.08"         # FOD amplitude threshold - Only used inside the patological volume of the 5TT image (5th volume)
+  seeding: "dynamic"     # Options: "gwmwi" / "random" / "dynamic"
   streams: "8000000"
   seed_num: "80000000"
-  max_len: "280" # In voxelsize units   
-  min_len: "3" # In voxelsize units
+  max_len: "280"         # In voxelsize units   
+  min_len: "3"           # In voxelsize units
   save_trk: False
   keep_full_tck: True
   sift2_tikhonov: "0.1"
   sift2_tv: "0.08"
 
 ### Type of lesion ###
-lesion: "tumor" # This corresponds to the name of the binary mask of the lesion
+lesion: "tumor"         # This corresponds to the name of the binary mask of the lesion in the dataset 
 
 ### DELETE INTERMEDIATE FILEs ###
 delete: 
@@ -45,15 +45,15 @@ delete:
   seeding_mask: False
   bias_corr: False
   seg_5tt: False
-  single_shells: False # Only applies to Single Shell extraction methods
+  single_shells: False  # Only applies to Single Shell extraction methods
   lesion_1mm: False
   weights_sift2: False
 
 ### PROCESSING TYPE ###
-process: "multi" # [multi, single] processing of subjects
+process: "multi"        # Options: [multi, single] processing of subjects
 
 ### NUMBER OF THREADS TO launch ###
-threads: "1"
+threads: "1"            # INFO: Corresponds to the number of subjects to process in parallel
 
 ### SKIP EXISTING FILES ###
-skip: True
+skip: True              # INFO: Keep true to maintain check points - beware of incomplete tractograms due to power shutdowns
