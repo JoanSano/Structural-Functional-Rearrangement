@@ -1,24 +1,24 @@
 ### RELEVANT PATHS TO CREATE THE CONNECTOME ###
 paths:  
-  dataset_dir: "/PATH/TO/DATA/"      # Example: "/home/joanfr/Documents/Data-Tumor/"
-  atlas_path: "/PATH/TO/LABEL/ATLAS" # Example: "/home/joanfr/Documents/Utils/AAL3/AAL3v1_1mm.nii.gz"
+  dataset_dir: "/PATH/TO/DATA/DIR/"
+  atlas_path: "/PATH/TO/ATLAS/AAL3/AAL3v1_1mm.nii.gz"
   
   # If null, then output is in the 'dataset_dir'
-  output_dir: "/PATH/TO/OUTPUT" #"/media/joanfr/T7/JoanFR_Sano/Ghent-Tumor_Network-Structural/" 
+  output_dir: "/PATH/TO/OUTPUT/DIR/Ghent-Tumor_Network-Structural/" 
 
-  session: "preop"    # opts: "preop", "psotop" // "*" mean/s all sessions available
-  subject: "sub-PAT*" # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
-  skip_subjects: ""   # List of subjects to skip
+  session: "ses-*"       # opts: "preop", "psotop" // "*" mean/s all sessions available
+  subject: "sub-*"       # "*" means all subjects available. IMPORTANT: Use the "*" wildcard for regex
+  skip_subjects: ""      # List of subjects to skip
 
 ### SPACE TO WHICH IS REGISTERED ###
-space: "MNI" # Options: "MNI", "dwi", "anat" 
+space: "MNI"             # Options: "MNI", "dwi", "anat" 
 
 ### fODF RECONSTRUCTION METHOD TO USE ###
-recons: "hybrid" # Options: "MSMT-CSD", "SS3T-CSD", "hybrid"// if null: uses MSMT_CSD 
-shell:           # Only used for single shell methods
+recons: "MSMT-CSD"       # Options: "MSMT-CSD", "SS3T-CSD", "hybrid"// if null: uses MSMT_CSD 
+shell:                   # Only used for single shell methods
   b_val: "2800"
-  num: "4"       # b=0 is shell number 1
-  healthy_dir: "/media/joanfr/T7/JoanFR_Sano/Ghent-Tumor_Network-Structural/Connectome-Structural_FOD-msmt_Group-healthy_July-5/"
+  num: "4"               # b=0 is shell number 1
+  healthy_dir: "/PATH*TO/HEALTHY/TRACTS/Connectome-Structural_FOD-msmt_Group-healthy_July-5/"
 
 ### TRACTOGRAPHY OPTIONS ###
 trac:
@@ -56,4 +56,4 @@ process: "multi"        # Options: [multi, single] processing of subjects
 threads: "1"            # INFO: Corresponds to the number of subjects to process in parallel
 
 ### SKIP EXISTING FILES ###
-skip: True              # INFO: Keep true to maintain check points - beware of incomplete tractograms due to power shutdowns
+skip: True              # INFO: Keep true to maintain check points - beware of incomplete tractograms due to unexpected shutdowns
