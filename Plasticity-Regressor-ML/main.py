@@ -24,16 +24,16 @@ parser.add_argument('--mode', type=str, default='train', choices=['train', 'stat
 parser.add_argument('-D', '--device', type=str, default='cuda', help="Device in which to run the code")
 parser.add_argument('-F', '--folder', type=str, default='results', help="Results directory")
 parser.add_argument('-M', '--model', type=str, default='linear', help="Trained model name")
-parser.add_argument('-W', '--wandb', type=bool, default=False, help="Whether to use wandb")
-parser.add_argument('--null_model', type=bool, choices=[False, True], help="Whether not to train the model to obtain a benchmark")
+parser.add_argument('-W', '--wandb', action=argparse.BooleanOptionalAction, help="Whether to use wandb")
+parser.add_argument('--null_model', action=argparse.BooleanOptionalAction, help="Whether not to train the model to obtain a benchmark")
 parser.add_argument('--tractography', type=str, default='msmt', choices=["msmt", "hybrid"], help="Whether not to train the model to obtain a benchmark")
 
 # Data specs
 parser.add_argument('-S', '--split', type=int, default=20, help="Training and testing splitting")
 parser.add_argument('-R', '--rois', type=int, default=166, help="Number of ROIs to use")
 parser.add_argument('-A', '--augment', type=int, default=1, help="Data augmentation factor")
-parser.add_argument('-V', '--validation', type=bool, default=False, help="Add validation step")
-parser.add_argument('-P', '--prior', type=str, default=False, help="Load available prior")
+parser.add_argument('-V', '--validation', action=argparse.BooleanOptionalAction, help="Add validation step")
+parser.add_argument('-P', '--prior', action=argparse.BooleanOptionalAction, help="Load available prior")
 parser.add_argument('-T', '--threshold', type=float, default=0.2, help="Threshold for creating the prior")
 
 # Machine-learning specs
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         prior_stats(thetas, entropies, mods, folder, prior_1, prior_2)
         quit() """
         
-        if args.prior[0].upper()+args.prior[1:].lower() == True:
+        if args.prior: #args.prior[0].upper()+args.prior[1:].lower() == True:
             prior, mean_connections = load_anat_prior(folder)
         else:
             prior, mean_connections = create_anat_prior(CONTROL, folder, save=True, threshold=args.threshold)
@@ -136,7 +136,7 @@ if __name__ == '__main__':
             model = Model(regres, optimizer, loss, data_fold, args)
 
             # Training and testing
-            if not args.null_model or args.null_model==False:
+            if not args.null_model:# or args.null_model==False:
                 model.train()
             pred_LOO = model.test(input_test, prior=prior).cpu()
             

@@ -1,7 +1,7 @@
 ### Create a conda environment with python version 3.10.4 ###
 numpy==1.22.0
 scipy
-sklearn
+scikit-learn
 pandas
 pyyaml
 seaborn
