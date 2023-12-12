@@ -488,7 +488,7 @@ def plot_degree_distribution(figs_path, args, degree_file):
     degree_list = pd.read_csv(degree_file, sep='\t')
 
     dgs = np.linspace(0,1000,1001)
-    dgs = np.array(dgs, dtype=np.int)
+    dgs = np.array(dgs, dtype=np.int64)
     distributions = np.zeros((len(degree_list["Subject"]), dgs.shape[0]))
 
     # Predictions
