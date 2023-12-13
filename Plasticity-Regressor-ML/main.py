@@ -163,7 +163,7 @@ if __name__ == '__main__':
         N_folds = len(PAT_subjects)
 
         # Loading patient information and REORDERING in the same way as CV_summary!!!
-        info = pd.read_csv('data/participants.tsv', sep='\t')
+        info = pd.read_csv('../Data/participants.tsv', sep='\t')
         info = info[info["participant_id"].str.contains("CON") == False]
         info.set_index(info.participant_id, inplace=True)
         info.drop(['participant_id'], axis=1, inplace=True)
