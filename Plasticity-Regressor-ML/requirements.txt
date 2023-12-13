@@ -6,6 +6,7 @@ pandas
 pyyaml
 seaborn
 wandb
+chardet
 tqdm
 networkx
 

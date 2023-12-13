@@ -58,50 +58,23 @@ if __name__ == '__main__':
     check_path(folder)
     CMs_path = check_path(folder+'predictions/CMs/')
     figs_path = check_path(folder+'figures/')
-    #flat_path = check_path(folder+'flat/')
-    #metrics_csv_path = check_path(folder+'metrics/numerical/')
-    #metrics_fig_path = check_path(folder+'metrics/figures/')
     
     if args.mode == 'train':
         with open(folder+'command_log.txt', 'w') as f:
             json.dump(args.__dict__, f, indent=2)
 
         # Preparing data
+        print("Loading data ...")
         (CONTROL, CON_subjects), (data, PAT_subjects), (PAT_1session, PAT_1session_subjects) = prepare_data(
-        f'../Data/structural/graphs/{args.tractography}/', dtype=torch.float64, rois=170, norm=False, flatten=True, del_rois=[35,36,81,82]
+            f'../Data/structural/graphs/{args.tractography}/', dtype=torch.float64, rois=170, norm=False, flatten=True, del_rois=[35,36,81,82]
         )
-        
-        # Creating or loading priors 
-        """ from scipy.stats import entropy
-        import networkx as nx
-        thetas = np.array([0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
-        entropies = thetas * 0
-        mods = thetas * 0
-        for i, theta in enumerate(thetas):
-            prior, mean_connections = create_anat_prior(CONTROL, folder, save=True, threshold=theta)
-            sg = GraphFromCSV(folder+'/prior.csv', 'prior', folder, rois=args.rois)
-            sg.unflatten_graph(to_default=True, save_flat=True)
-            sg.process_graph(log=False, reshuffle=True, bar_label='Probability of Connection')
-            prior_graph = sg.get_connections()
-            entropies[i] = entropy(prior)
-            mods[i] = nx.algorithms.community.modularity(
-                            nx.from_numpy_array(prior_graph),
-                            nx.algorithms.community.louvain_communities(
-                                    nx.from_numpy_array(prior_graph)
-                                ), 
-                            weight='weight'
-                        )
-            if theta == .2:
-                prior_1 = prior
-            if theta == .7:
-                prior_2 = prior
-        from utils.figures import prior_stats
-        prior_stats(thetas, entropies, mods, folder, prior_1, prior_2)
-        quit() """
-        
-        if args.prior: #args.prior[0].upper()+args.prior[1:].lower() == True:
+
+        # Creating or loading priors         
+        if args.prior:
+            print("Loading prior ...")
             prior, mean_connections = load_anat_prior(folder)
         else:
+            print("Creating prior ...")
             prior, mean_connections = create_anat_prior(CONTROL, folder, save=True, threshold=args.threshold)
             sg = GraphFromCSV(folder+'/prior.csv', 'prior', folder, rois=args.rois)
             sg.unflatten_graph(to_default=True, save_flat=True)
@@ -111,10 +84,11 @@ if __name__ == '__main__':
         CV = LeaveOneOut()
         N_folds = CV.get_n_splits(data[0])
 
+        print("All OK!")
         ################
         ### Training ###
         ################
-        print("Training using", args.device)
+        print("Training will be done using ", args.device)
 
         # Results
         CV_summary = pd.DataFrame(columns=['Subject', 'MSE', 'MAE', 'PCC', 'CosineSimilarity', 'KL_Div', 'JS_Div'])
