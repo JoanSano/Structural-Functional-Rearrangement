@@ -7,6 +7,7 @@ import wandb
 import warnings
 import numpy as np
 from scipy.stats import t as t_dist
+import logging
 
 from models.networks import LinearRegres, NonLinearRegres
 from models.metrics import BayesianWeightedLoss
@@ -90,7 +91,7 @@ class Model(nn.Module):
                 if self.args.wandb: 
                     wandb.log({"Batch Training Loss": loss_tr}, step=ep)
                 else:
-                    print("Epoch {}/{}: Training loss: {}".format(ep, self.args.epochs, loss_tr))
+                    logging.info("Epoch {}/{}: Training loss: {}".format(ep, self.args.epochs, loss_tr))
             # Validation
             if self.val_step and (ep%self.args.val_freq==0):
                 with torch.no_grad():
@@ -98,7 +99,7 @@ class Model(nn.Module):
                     if self.args.wandb: 
                         wandb.log({"Batch validation Loss": loss_val}, step=ep)
                     else:
-                        print("Validation loss: {}".format(loss_val))
+                        logging.info("Validation loss: {}".format(loss_val))
             # Live updating
             if self.args.wandb: 
                 wandb.watch(self.network)

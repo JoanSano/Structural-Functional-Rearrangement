@@ -10,6 +10,7 @@ import pandas as pd
 import json
 import seaborn as sns
 import matplotlib.pyplot as plt
+import logging, sys
 
 from models.methods import Model, return_specs, to_array
 from models.networks import LinearRegres, NonLinearRegres
@@ -45,14 +46,16 @@ parser.add_argument('-B', '--batch', type=int, default=4, help="Batch size")
 parser.add_argument('-RE', '--regressor', type=str, default='linear', choices=['linear','nonlinear'], help="Type of regression")
 parser.add_argument('-L', '--loss', type=str, default='mse', choices=['mse', 'huber'], help="Reconstruction loss used in training")
 args = parser.parse_args()
-
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 if __name__ == '__main__':
-    if args.device == 'cuda':
-        args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    """ if args.device == 'cuda' or torch.cuda.is_available():
+        args.device == 'cuda'
+        logging.info(" Training will be done using gpu")
     else: 
         args.device = 'cpu'
-
+        logging.info(" Training will be done using cpu") """
+    args.device = 'cpu'
     # Relevant paths
     folder = args.folder+'_'+args.model+'/'
     check_path(folder)
@@ -64,17 +67,17 @@ if __name__ == '__main__':
             json.dump(args.__dict__, f, indent=2)
 
         # Preparing data
-        print("Loading data ...")
+        logging.info(" Loading data ...")
         (CONTROL, CON_subjects), (data, PAT_subjects), (PAT_1session, PAT_1session_subjects) = prepare_data(
             f'../Data/structural/graphs/{args.tractography}/', dtype=torch.float64, rois=170, norm=False, flatten=True, del_rois=[35,36,81,82]
         )
 
         # Creating or loading priors         
         if args.prior:
-            print("Loading prior ...")
+            logging.info(" Loading prior ...")
             prior, mean_connections = load_anat_prior(folder)
         else:
-            print("Creating prior ...")
+            logging.info(" Creating prior ...")
             prior, mean_connections = create_anat_prior(CONTROL, folder, save=True, threshold=args.threshold)
             sg = GraphFromCSV(folder+'/prior.csv', 'prior', folder, rois=args.rois)
             sg.unflatten_graph(to_default=True, save_flat=True)
@@ -84,11 +87,10 @@ if __name__ == '__main__':
         CV = LeaveOneOut()
         N_folds = CV.get_n_splits(data[0])
 
-        print("All OK!")
+        logging.info(" All OK!")
         ################
         ### Training ###
         ################
-        print("Training will be done using ", args.device)
 
         # Results
         CV_summary = pd.DataFrame(columns=['Subject', 'MSE', 'MAE', 'PCC', 'CosineSimilarity', 'KL_Div', 'JS_Div'])
@@ -97,8 +99,8 @@ if __name__ == '__main__':
         final_model = final_regres.state_dict()
 
         for fold, (train_index, test_index) in enumerate(CV.split(data[0])):
-            print("=============================================")
-            print("Fold number {} out of {} \n".format(fold+1, N_folds))
+            logging.info(" =============================================")
+            logging.info(" Fold number {} out of {} \n".format(fold+1, N_folds))
 
             input_train, input_test = data[0][train_index], data[0][test_index].to(args.device)
             target_train, target_test = data[1][train_index], data[1][test_index]
@@ -318,14 +320,14 @@ if __name__ == '__main__':
         correlations = np.array([
             pearsonr(mse_z, mae_z)[0], pearsonr(mse_z, pcc_z)[0], pearsonr(mse_z, cs_z)[0], pearsonr(mae_z, pcc_z)[0], pearsonr(mae_z, cs_z)[0], pearsonr(pcc_z, cs_z)[0]
         ])
-        print("Correlations between metrics:")
-        print("MSE-MAE: r = ",correlations[0])
-        print("MSE-PCC: r = ",correlations[1])
-        print("MSE-CS: r = ",correlations[2])
-        print("MAE-PCC: r = ",correlations[3])
-        print("MAE-CS: r = ",correlations[4])
-        print("PCC-CS: r = ",correlations[5])
-        print("=====================================")
+        logging.info(" Correlations between metrics:")
+        logging.info(" MSE-MAE: r = ",correlations[0])
+        logging.info(" MSE-PCC: r = ",correlations[1])
+        logging.info(" MSE-CS: r = ",correlations[2])
+        logging.info(" MAE-PCC: r = ",correlations[3])
+        logging.info(" MAE-CS: r = ",correlations[4])
+        logging.info(" PCC-CS: r = ",correlations[5])
+        logging.info(" =====================================")
 
         # 3) Checking for the effect of tumor size
         size_correlation(figs_path, args, mae, pcc, tumor_sizes, PAT_subjects)
