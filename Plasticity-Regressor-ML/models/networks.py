@@ -20,7 +20,7 @@ class NonLinearRegres(nn.Module):
         self.multi_layer = nn.Sequential(
             nn.Linear(in_features=features, out_features=int(features*ampli), dtype=torch.float64),
             nn.Sigmoid(),
-            nn.Linear(in_features=int(features*ampli), out_features=int(features*ampli), dtype=torch.float64),
+            nn.Linear(in_features=int(features*ampli), out_features=int(features), dtype=torch.float64),
         )
     
     def forward(self, x):
