@@ -49,13 +49,6 @@ args = parser.parse_args()
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 if __name__ == '__main__':
-    """ if args.device == 'cuda' or torch.cuda.is_available():
-        args.device == 'cuda'
-        logging.info(" Training will be done using gpu")
-    else: 
-        args.device = 'cpu'
-        logging.info(" Training will be done using cpu") """
-    args.device = 'cpu'
     # Relevant paths
     folder = args.folder+'_'+args.model+'/'
     check_path(folder)
@@ -63,9 +56,19 @@ if __name__ == '__main__':
     figs_path = check_path(folder+'figures/')
     
     if args.mode == 'train':
+        # Dump configuration file for reproducibility
         with open(folder+'command_log.txt', 'w') as f:
             json.dump(args.__dict__, f, indent=2)
-
+        
+        # Specifing TORCH device to use
+        logging.info(torch.cuda.is_available())
+        if args.device == 'cuda' and torch.cuda.is_available():
+            args.device == torch.device('cuda')
+            logging.info(" Training will be done using gpu")
+        else: 
+            args.device = torch.device('cpu')
+            logging.info(" Training will be done using cpu")
+        #args.device = 'cpu'
         # Preparing data
         logging.info(" Loading data ...")
         (CONTROL, CON_subjects), (data, PAT_subjects), (PAT_1session, PAT_1session_subjects) = prepare_data(
