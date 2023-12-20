@@ -321,12 +321,12 @@ if __name__ == '__main__':
             pearsonr(mse_z, mae_z)[0], pearsonr(mse_z, pcc_z)[0], pearsonr(mse_z, cs_z)[0], pearsonr(mae_z, pcc_z)[0], pearsonr(mae_z, cs_z)[0], pearsonr(pcc_z, cs_z)[0]
         ])
         logging.info(" Correlations between metrics:")
-        logging.info(" MSE-MAE: r = ",correlations[0])
-        logging.info(" MSE-PCC: r = ",correlations[1])
-        logging.info(" MSE-CS: r = ",correlations[2])
-        logging.info(" MAE-PCC: r = ",correlations[3])
-        logging.info(" MAE-CS: r = ",correlations[4])
-        logging.info(" PCC-CS: r = ",correlations[5])
+        logging.info(" MSE-MAE: r = " + str(correlations[0]))
+        logging.info(" MSE-PCC: r = " + str(correlations[1]))
+        logging.info(" MSE-CS: r = " + str(correlations[2]))
+        logging.info(" MAE-PCC: r = " + str(correlations[3]))
+        logging.info(" MAE-CS: r = " + str(correlations[4]))
+        logging.info(" PCC-CS: r = " + str(correlations[5]))
         logging.info(" =====================================")
 
         # 3) Checking for the effect of tumor size
