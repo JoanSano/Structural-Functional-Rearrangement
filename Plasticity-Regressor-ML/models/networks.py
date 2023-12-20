@@ -14,7 +14,7 @@ class LinearRegres(nn.Module):
 
 class NonLinearRegres(nn.Module):
     """ Simple linear regressor """
-    def __init__(self, ROIs, ampli=1/2, layers=2):
+    def __init__(self, ROIs, ampli=1/2, layers=1):
         super().__init__()
         features = ROIs*(ROIs-1)//2 # Lower triangular connections
         if layers==1:
