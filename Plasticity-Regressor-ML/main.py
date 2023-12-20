@@ -40,7 +40,7 @@ parser.add_argument('-T', '--threshold', type=float, default=0.2, help="Threshol
 # Machine-learning specs
 parser.add_argument('-E', '--epochs', type=int, default=10, help="Number of epochs to train")
 parser.add_argument('-LR', '--learning_rate', type=float, default=0.01, help="Learning Rate")
-parser.add_argument('-O', '--optimizer', type=str, default='sgd', help="Optimizer")
+parser.add_argument('-O', '--optimizer', type=str, default='sgd', choices=['sgd', 'adamw'], help="Optimizer")
 parser.add_argument('--val_freq', type=int, default=5, help="Number of epochs between validation steps")
 parser.add_argument('-B', '--batch', type=int, default=4, help="Batch size")
 parser.add_argument('-RE', '--regressor', type=str, default='linear', choices=['linear','nonlinear'], help="Type of regression")

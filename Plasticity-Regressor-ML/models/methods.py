@@ -138,11 +138,13 @@ def return_specs(args, prior=None):
     loss = BayesianWeightedLoss(prior, type=args.loss)
 
     if args.optimizer == 'sgd': 
-        sgd = optim.SGD(regres.parameters(), lr=args.learning_rate)
+        optim = optim.SGD(regres.parameters(), lr=args.learning_rate) # Leave default parameters
+    elif args.optimizer == 'adamw':
+        optim = optim.AdamW(regres.parameters(), lr=args.learning_rate) # Leave default parameters
     else:
         raise ValueError("Optimizer not implemented")
 
-    return regres, loss, sgd
+    return regres, loss, optim
 
 def grubbs_test(x, alpha=0.05):
     """
