@@ -73,10 +73,13 @@ class Model(nn.Module):
             num_batches += 1
         return epoch_loss/num_batches
 
-    def train(self):
+    def train(self, fold, N_folds):
         """ Trains the model. If specified and if possible also doing validation."""
+        logging.info(" =============================================")
+        logging.info(" Fold number {} out of {} \n".format(fold+1, N_folds))
+        
         if self.args.wandb: 
-            wandb.init(project="Plasticity-Regressor", entity="joansano")
+            wandb.init(project="Plasticity-Regressor", entity="joansano", name="Fold {}/{}".format(fold+1, N_folds))
             wandb.config.update(self.args)
         tr_loader, val_loader = list(), list()
         for ep in range(1, self.args.epochs+1):
@@ -103,6 +106,7 @@ class Model(nn.Module):
             # Live updating
             if self.args.wandb: 
                 wandb.watch(self.network)
+        wandb.finish()
 
     def test(self, x, prior=None):
         """ Generates a prediction of a given batch """
