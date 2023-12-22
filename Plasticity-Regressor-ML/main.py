@@ -102,9 +102,6 @@ if __name__ == '__main__':
         final_model = final_regres.state_dict()
 
         for fold, (train_index, test_index) in enumerate(CV.split(data[0])):
-            logging.info(" =============================================")
-            logging.info(" Fold number {} out of {} \n".format(fold+1, N_folds))
-
             input_train, input_test = data[0][train_index], data[0][test_index].to(args.device)
             target_train, target_test = data[1][train_index], data[1][test_index]
             data_fold = (input_train, target_train)
@@ -116,7 +113,9 @@ if __name__ == '__main__':
 
             # Training and testing
             if not args.null_model:# or args.null_model==False:
-                model.train()
+                model.train(fold, N_folds)
+            else:
+                logging.info(" ===== NULL: Fold {}/{} ======".format(fold+1, N_folds))
             pred_LOO = model.test(input_test, prior=prior).cpu()
             
             sg = GraphFromTensor(pred_LOO, subject+'_ses-postop_prediction', base_dir=CMs_path, rois=args.rois)
