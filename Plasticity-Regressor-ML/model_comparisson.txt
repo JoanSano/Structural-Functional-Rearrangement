@@ -1,3 +1,3 @@
-results_fcnet_mse
-results_linear_huber
-results_null_mse
+results-FCNET_1Layer_hybrid
+results-linear_hybrid
+results-null_hybrid

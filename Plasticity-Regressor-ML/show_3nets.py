@@ -28,9 +28,9 @@ hub_sub3 = f'{model2}/predictions/CMs/sub-PAT{str(k)}_ses-postop_prediction.csv'
 nul_sub1 = f'{model3}/predictions/CMs/sub-PAT0{str(i)}_ses-postop_prediction.csv'
 nul_sub2 = f'{model3}/predictions/CMs/sub-PAT{str(j)}_ses-postop_prediction.csv'
 nul_sub3 = f'{model3}/predictions/CMs/sub-PAT{str(k)}_ses-postop_prediction.csv'
-g_truth1 = f'data/ses-postop/sub-PAT0{str(i)}_ses-postop_flatCM.csv'
-g_truth2 = f'data/ses-postop/sub-PAT{str(j)}_ses-postop_flatCM.csv'
-g_truth3 = f'data/ses-postop/sub-PAT{str(k)}_ses-postop_flatCM.csv'
+g_truth1 = f'../Data/structural/graphs/hybrid/ses-postop/sub-PAT0{str(i)}_ses-postop_flatCM.csv'
+g_truth2 = f'../Data/structural/graphs/hybrid/ses-postop/sub-PAT{str(j)}_ses-postop_flatCM.csv'
+g_truth3 = f'../Data/structural/graphs/hybrid/ses-postop/sub-PAT{str(k)}_ses-postop_flatCM.csv'
 
 mlp_sub1 = np.array(pd.read_csv(mlp_sub1, sep=',', header=None))
 mlp_sub2 = np.array(pd.read_csv(mlp_sub2, sep=',', header=None))
@@ -148,7 +148,7 @@ res_nul_sub2 = np.abs(nul_sub2 - g_truth2)
 res_nul_sub3 = np.abs(nul_sub3 - g_truth3)
 
 ########### FIGURE MLP ###########
-cmin, cmax = 0, 8.5
+cmin, cmax = 0, 10.5
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(nrows=3, ncols=3, figsize=(8,14))
 plt.subplots_adjust(left=0.05,
                     bottom=0.01, 
@@ -193,7 +193,7 @@ plt.savefig(f'{model1}/mlp_predictions.eps', dpi=1000)
 plt.savefig(f'{model1}/mlp_predictions.svg', dpi=1000)
 
 ########### FIGURE HUBER ###########
-cmin, cmax = 0, 8.5
+cmin, cmax = 0, 10.5
 fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(nrows=3, ncols=3, figsize=(8,14))
 plt.subplots_adjust(left=0.05,
                     bottom=0.01, 

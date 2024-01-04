@@ -189,11 +189,11 @@ def size_correlation(figs_path, args, mae, pcc, tumor_sizes, PAT_subjects, alpha
     fit = slope * np.linspace(0,90,400) + intercept
     plt.plot(np.linspace(0,90,400), fit, color='b', linewidth=0.5)
     slope, intercept, _, _, _ = linregress(tm_3drop, pcc_3drop)
-    fit = slope * np.linspace(0,60,400) + intercept
-    plt.plot(np.linspace(0,60,400), fit, color='orange', linewidth=0.5)
+    fit = slope * np.linspace(0,55,400) + intercept
+    plt.plot(np.linspace(0,55,400), fit, color='orange', linewidth=0.5)
 
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False)
-    #ax.set_ylim([0.84,0.94]), ax.set_yticks([0.84,0.86,0.88,0.90,0.92,0.94]), ax.set_yticklabels(['0.84','0.86','0.88','0.90','0.92','0.94'], fontsize=8)
+    ax.set_ylim([0.76,0.88]), ax.set_yticks([0.76,0.78,0.80,0.82,0.84,0.86,0.88]), ax.set_yticklabels([0.76,0.78,0.80,0.82,0.84,0.86,0.88], fontsize=8)
     ax.set_xticks([0,20,40,60,80]), ax.set_xticklabels(['0','20','40','60','80'], fontsize=8)
     ax.set_xlabel('Tumor size (cm$^3$)', fontsize=8), ax.set_ylabel('PCC', fontsize=8)
     plt.legend(loc=4, frameon=True, fontsize=8)
@@ -237,10 +237,10 @@ def size_correlation(figs_path, args, mae, pcc, tumor_sizes, PAT_subjects, alpha
         color=[0,0,1,0.5],edgecolor=[0,0,0,1],error_kw=dict(lw=2),
         ecolor='k', capsize=15, width=0.75, align='center'
     )
-    barplot_annotate_brackets(0, 1, '**', [1,2], [mean_small, mean_large], dh=0.005, barh=.001, fs=10)
+    barplot_annotate_brackets(0, 1, '*', [1,2], [mean_small, mean_large], dh=0.01, barh=.001, fs=10)
 
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False), ax.spines['bottom'].set_visible(False)
-    #ax.set_ylim([0.86,0.92]), ax.set_yticks([0.86,0.88,0.90,0.92]), ax.set_yticklabels(['0.86','0.88','0.90','0.92'])
+    ax.set_ylim([0.76,0.86]), ax.set_yticks([0.76,0.78,0.80,0.82,0.84,0.86]), ax.set_yticklabels(['0.76','0.78','0.80','0.82','0.84','0.86'])
     ax.set_xticklabels(['Size<'+str(np.percentile(tm_size,50))+'cm$^3$','Size>'+str(np.percentile(tm_size,50))+'cm$^3$'])
     ax.set_xticks([1,2]), ax.set_ylabel('PCC')
     plt.savefig(figs_path+args.model+'_tumor-size.svg', dpi=1000)
@@ -311,7 +311,7 @@ def type_effects(figs_path, args, mae, pcc, tumor_types, PAT_subjects, alpha=0.0
     )
 
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False), ax.spines['bottom'].set_visible(False)
-    #ax.set_ylim([0.88,0.90]), ax.set_yticks([0.86,0.88,0.90,0.92]), ax.set_yticklabels(['0.86','0.88','0.90','0.92'])
+    ax.set_ylim([0.78,0.84]), ax.set_yticks([0.78,0.80,0.82,0.84]), ax.set_yticklabels([0.78,0.80,0.82,0.84])
     ax.set_xticks([1,2]), ax.set_xticklabels(['Meningioma', 'Glioma']), ax.set_ylabel('PCC')
     plt.savefig(figs_path+args.model+'_tumor-type.svg', dpi=1000)
     plt.savefig(figs_path+args.model+'_tumor-type.eps', dpi=1000)
@@ -366,7 +366,7 @@ def location_effects(figs_path, args, mae, pcc, tumor_locs, PAT_subjects, alpha=
     )
 
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False), ax.spines['bottom'].set_visible(False)
-    #ax.set_ylim([0.86,0.92]), ax.set_yticks([0.86,0.88,0.90,0.92]), ax.set_yticklabels(['0.86','0.88','0.90','0.92'])
+    ax.set_ylim([0.76,0.82]), ax.set_yticks([0.76,0.78,0.80,0.82]), ax.set_yticklabels(['0.76','0.78','0.80','0.82'])
     ax.set_xticks([1,2]), ax.set_xticklabels(['Frontal', 'Other']), ax.set_ylabel('PCC')
     plt.savefig(figs_path+args.model+'_tumor-loc.svg', dpi=1000)
     plt.savefig(figs_path+args.model+'_tumor-loc.eps', dpi=1000)
@@ -419,7 +419,7 @@ def periventricularity_effects(figs_path, args, mae, pcc, tumor_ventricular, PAT
     )
 
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False), ax.spines['bottom'].set_visible(False)
-    #ax.set_ylim([0.86,0.92]), ax.set_yticks([0.86,0.88,0.90,0.92]), ax.set_yticklabels(['0.86','0.88','0.90','0.92'])
+    ax.set_ylim([0.78,0.84]), ax.set_yticks([0.78,0.80,0.82,0.84]), ax.set_yticklabels(['0.78','0.80','0.82','0.84'])
     ax.set_xticks([1,2]), ax.set_xticklabels(['PV', 'Non-PV']), ax.set_ylabel('PCC')
     plt.savefig(figs_path+args.model+'_tumor-PV.svg', dpi=1000)
     plt.savefig(figs_path+args.model+'_tumor-PV.eps', dpi=1000)
@@ -472,11 +472,11 @@ def grade_effects(figs_path, args, mae, pcc, tumor_grade, PAT_subjects, alpha=0.
         color=[0,0,1,0.5],edgecolor=[0,0,0,1],error_kw=dict(lw=2),
         ecolor='k', capsize=15, width=0.75, align='center'
     )
-    barplot_annotate_brackets(0, 1, '*', [1,2], [mean_pcc_oth, mean_pcc_front], dh=0.005, barh=.001, fs=10)
+    #barplot_annotate_brackets(0, 1, '*', [1,2], [mean_pcc_oth, mean_pcc_front], dh=0.005, barh=.001, fs=10)
 
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False)
     ax.spines['left'].set_visible(False), ax.spines['bottom'].set_visible(False)
-    #ax.set_ylim([0.86,0.92]), ax.set_yticks([0.86,0.88,0.90,0.92]), ax.set_yticklabels([])
+    ax.set_ylim([0.78,0.84]), ax.set_yticks([0.78,0.80,0.82, 0.84]), ax.set_yticklabels([])
     ax.tick_params(axis='y', length=0)
     ax.set_xticks([1,2]), ax.set_xticklabels(['Grade I', 'Grade II-III'])#, ax.set_ylabel('PCC')
     plt.savefig(figs_path+args.model+'_tumor-grade.svg', dpi=1000)
@@ -529,7 +529,7 @@ def plot_degree_distribution(figs_path, args, degree_file):
     ax.set_xlabel('log(1+$\omega$)', fontsize=20), ax.set_ylabel('Probability', fontsize=20)
     ax.spines['right'].set_visible(False), ax.spines['top'].set_visible(False)
     ax.set_xlim([0, 500])#, #ax.set_ylim([0, 0.035])
-    ax.set_title("NULL", fontsize=20)
+    ax.set_title("FCNET", fontsize=20)
     plt.legend(loc='upper right', frameon=False, fontsize=20)
 
     plt.savefig(figs_path+args.model+'_degree-probs.svg', dpi=1000)
