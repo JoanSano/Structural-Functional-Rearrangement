@@ -71,13 +71,13 @@ def KL_JS_divergences(G1, G2, rois, eps=1e-8):
 if __name__ == '__main__':
     # Load data
     CONTROL, C_subjects = prepare_structural_healthy(
-        './datasets/structural/graphs/hybrid/', rois=170, sessions=['preop','postop'], norm=True, flatten=False, del_rois=[35,36,81,82], dtype=torch.float64
+        '../Data/structural/graphs/hybrid/', rois=170, sessions=['preop','postop'], norm=True, flatten=False, del_rois=[35,36,81,82], dtype=torch.float64
     )
     Hybrid, H_subjects = prepare_structural_methods(
-        './datasets/structural/graphs/hybrid/', rois=170, session='preop-hybrid', norm=True, flatten=False, del_rois=[35,36,81,82], dtype=torch.float64
+        '../Data/structural/graphs/hybrid/', rois=170, session='preop', norm=True, flatten=False, del_rois=[35,36,81,82], dtype=torch.float64
     )
     MSMT, MS_subjects = prepare_structural_methods(
-        './datasets/structural/graphs/hybrid/', rois=170, session='preop-msmt', norm=True, flatten=False, del_rois=[35,36,81,82], dtype=torch.float64
+        '../Data/structural/graphs/hybrid/', rois=170, session='preop', norm=True, flatten=False, del_rois=[35,36,81,82], dtype=torch.float64
     )
     Hybrid, MSMT, Patients = match_structural_methods(Hybrid, H_subjects, MSMT, MS_subjects)
     NC, NH, NMS = CONTROL.shape[0], Hybrid.shape[0], MSMT.shape[0]
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     ######################
     # Loading patient information and REORDERING in the same order!!!
     N_features = 5
-    info = pd.read_csv('datasets/participants.tsv', sep='\t')
+    info = pd.read_csv('../Data/participants.tsv', sep='\t')
     info = info[info["participant_id"].str.contains("CON") == False]
     info.set_index(info.participant_id, inplace=True)
     info.drop(['participant_id'], axis=1, inplace=True)
