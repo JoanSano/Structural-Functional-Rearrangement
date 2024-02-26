@@ -29,9 +29,17 @@ if __name__ == '__main__':
     ###################################
     ### Get files in an ordered way ###
     ###################################
-    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files("../Data/functional/images/", sessions='*', subject="CON")
-    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files("../Data/functional/images/", sessions='*', subject="PAT", exclude='*lesion*')
-    
+    # Subjects with shorter TR (i.e., 2.1 sec)
+    CON_ShortTR = [] #["sub-CON01","sub-CON02","sub-CON03","sub-CON04"]
+    PAT_ShortTR = [] #["sub-PAT01","sub-PAT02","sub-PAT03","sub-PAT05","sub-PAT06","sub-PAT07","sub-PAT08"]
+    # Gather files with appropriate exclusions if applicable
+    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files(
+        "../Data/functional/images/", sessions='*', subject="CON", ommit_IDs=CON_ShortTR
+    )
+    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files(
+        "../Data/functional/images/", sessions='*', subject="PAT", exclude='*lesion*', ommit_IDs=PAT_ShortTR
+    )
+
     ######################
     ### Tumor Features ###
     ######################
