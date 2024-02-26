@@ -53,12 +53,14 @@ if __name__ == '__main__':
     tumor_locs = np.array([1 if 'Frontal' in dict(info["tumor location"])[k] else 2 for k in P_subjects_paired])
     tumor_grade = np.array([2 if 'II' in dict(info["tumor type & grade"])[k] else 1 for k in P_subjects_paired])
     tumor_ventricles = np.array([2 if 'yes' in dict(info["ventricles"])[k] else 1 for k in P_subjects_paired])
+    TR_paired = np.array([dict(info["Pre-surgery TR"])[k] for k in P_subjects_paired])
     tumor_sizes_unpaired = np.array([dict(info["tumor size (cub cm)"])[k] for k in P_subjects_unpaired])
     tumor_types_unpaired = np.array([1 if 'ningioma' in dict(info["tumor type & grade"])[k] else 2 for k in P_subjects_unpaired])
     tumor_locs_unpaired = np.array([1 if 'Frontal' in dict(info["tumor location"])[k] else 2 for k in P_subjects_unpaired])
     tumor_grade_unpaired = np.array([2 if 'II' in dict(info["tumor type & grade"])[k] else 1 for k in P_subjects_unpaired])
     tumor_ventricles_unpaired = np.array([2 if 'yes' in dict(info["ventricles"])[k] else 1 for k in P_subjects_unpaired])
-
+    TR_unpaired = np.array([dict(info["Pre-surgery TR"])[k] for k in P_subjects_unpaired])
+    
     ################
     ### Analysis ###
     ################
@@ -355,7 +357,9 @@ if __name__ == '__main__':
         np.concatenate((tumor_sizes,tumor_sizes_unpaired)), 
         np.concatenate((tumor_ventricles,tumor_ventricles_unpaired)),
         np.concatenate((tumor_locs,tumor_locs_unpaired)),
-        np.concatenate((tumor_grade,tumor_grade_unpaired)), fig_fmt="svg", tissue=tissue_label
+        np.concatenate((tumor_grade,tumor_grade_unpaired)), 
+        np.concatenate((TR_paired,TR_unpaired)), 
+        fig_fmt="svg", tissue=tissue_label
     )
 
     """ ############################
