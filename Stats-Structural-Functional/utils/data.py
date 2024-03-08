@@ -45,7 +45,7 @@ def graph_dumper(data_path, graphs, subject_list, suffix='evolved'):
         dataframe = pd.DataFrame(data=gr.astype(float))
         dataframe.to_csv(data_path+name, sep=',', header=False, float_format='%.6f', index=False)
 
-def common_subjects(data_path, sessions, subject_ID='*', format=".csv"):
+def common_subjects(data_path, sessions, subject_ID='*', format=".csv", ommit_IDs=[]):
     """ Finds the common subjects between two sessions """
     # Loading files
     files = list()
@@ -55,11 +55,12 @@ def common_subjects(data_path, sessions, subject_ID='*', format=".csv"):
     subjects_pre = set()
     subjects_post = list()
     for f in files:
-        _, session, patient, _ = get_info(f)
-        if 'preop' in session:
-            subjects_pre.add(patient)
-        else:
-            subjects_post.append(patient)
+        _, session, subject, _ = get_info(f)
+        if subject not in ommit_IDs:
+            if 'preop' in session:
+                subjects_pre.add(subject)
+            else:
+                subjects_post.append(subject)
     # Finding intersection
     return subjects_pre.intersection(subjects_post), subjects_pre.symmetric_difference(subjects_post)
 
@@ -250,14 +251,14 @@ def data_splitter(data, split=[70, 20, 10]):
     else:
         return [data[i] for i in tr], [data[k] for k in ts]
 
-def prepare_functional_files(data_path, sessions, subject, exclude=''):
+def prepare_functional_files(data_path, sessions, subject, exclude='', ommit_IDs=[]):
     """
     Returns the nifti files in a useful format.
     Inputs:
         data_path: path to the data
     """
     
-    paired, unpaired = common_subjects(data_path, sessions=sessions, subject_ID=subject, format=".nii.gz")
+    paired, unpaired = common_subjects(data_path, sessions=sessions, subject_ID=subject, format=".nii.gz", ommit_IDs=ommit_IDs)
     data_paired, data_unpaired = [], []
     for s in paired:
         data_paired.append([

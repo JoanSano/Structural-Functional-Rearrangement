@@ -388,7 +388,7 @@ def permutation_test_correlation(x, y, num_permutations=1000):
         permuted_y = np.random.permutation(y)
         permuted_corr, _ = pearsonr(x, permuted_y)
         permuted_correlations.append(permuted_corr)
-
+    # Two-sided
     p_value = (np.abs(permuted_correlations) >= np.abs(observed_corr)).mean()
     return observed_corr, p_value
 

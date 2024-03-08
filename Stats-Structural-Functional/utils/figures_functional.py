@@ -393,7 +393,8 @@ def group_analysis(
     distance, richness_change, dynamic_oedema_change_or,
     Nc, Np, session,
     power_change, healthy_power, 
-    tumor_type, tumor_size, tumor_ventr, tumor_loc, tumor_grade, fig_fmt="png", tissue='Whole Tumor'
+    tumor_type, tumor_size, tumor_ventr, tumor_loc, tumor_grade, TRs,
+    fig_fmt="png", tissue='Whole Tumor'
     ):
     # Wee keep the original direction of DAS
     dynamic_change_or = np.copy(dynamic_change) 
@@ -540,7 +541,7 @@ def group_analysis(
     ax[3].plot(np.linspace(-35,40,400), fit, color='salmon', linewidth=2)
     ax[3].fill_between(x2, fit_min_max, fit_max_min, color="lightsalmon", alpha=0.1, linewidth=0)
     ax[3].fill_between(x1, fit_max_max, fit_min_min, color="lightsalmon", alpha=0.1, linewidth=0)
-    plot_pval = " < 0.001" if p_dyn_dyn<0.001 else f" = {round(r_dyn_dyn,3)}"
+    plot_pval = " < 0.001" if p_dyn_dyn<0.001 else f" = {round(p_dyn_dyn,3)}"
     ax[3].text(-35,40,f"r = {round(r_dyn_dyn,3)} \np{plot_pval}", fontweight="bold", color="salmon")
     ax[3].spines['right'].set_visible(False), ax[3].spines['top'].set_visible(False)
     ax[3].set_xlim([-40,45]), ax[3].set_ylim([-40,55])
@@ -729,3 +730,61 @@ def group_analysis(
     plt.savefig(f"../RESULTS/figures/functional/{session}/global-analysis_{session}."+fig_fmt, dpi=1000)
     plt.close()
 
+    # We implement a permutation analysis of the subjects with short TR
+    # The real correlation coefficients for the PCC and DAS results are:
+    from sklearn.utils import resample
+    real_r_PCC = -0.215
+    real_r_DAS = 0.603
+    # Obtaining the null distribution
+    N = 1000
+    null_rs = np.zeros((N,2))
+    IDs_all = np.arange(0,mean_dynamic_change_or.shape[0])
+    for perm in range(N):
+        sampled = resample(IDs_all, replace=False, n_samples=len(IDs_all)-7)
+        null_rs[perm,0], _ = pearsonr(mean_dynamic_change[sampled], mean_pcc_sim[sampled])
+        null_rs[perm,1],_ = pearsonr(mean_dynamic_change_or[sampled], mean_dynamic_odema_sim[sampled])
+    # Two-sided
+    p_value_pcc = (np.abs(null_rs[:,0]) >= np.abs(real_r_PCC)).mean()
+    p_value_pcc = 1-p_value_pcc if p_value_pcc>=0.5 else p_value_pcc  
+    p_value_das = (np.abs(null_rs[:,1]) >= np.abs(real_r_DAS)).mean()
+    p_value_das = 1-p_value_das if p_value_das>=0.5 else p_value_das
+
+    fig, ax = plt.subplots(1,2,figsize=(9,4))
+    plt.subplots_adjust(left=0.1,
+                    bottom=0.125, 
+                    right=0.96, 
+                    top=0.9, 
+                    wspace=0.1, 
+                    hspace=0.3)
+    ax[0].spines['right'].set_visible(False), ax[0].spines['top'].set_visible(False)
+    ax[0].hist(null_rs[:,0])
+    ax[0].vlines(real_r_PCC, 0, 30, linewidth=3, color='red', label="TR=2.4s")
+    ax[0].vlines(r_dyn_pcc, 0, 30, linewidth=3, color='black', label="All subjects")
+    ax[0].set_xlabel("Correlation between PCC and DAS")
+    ax[0].set_ylabel("Permuted distributions")
+    ax[0].set_title(f"p-value={round(p_value_pcc,3)}")
+    ax[0].legend(frameon=False)
+
+    ax[1].spines['right'].set_visible(False), ax[1].spines['top'].set_visible(False)
+    ax[1].hist(null_rs[:,1])
+    ax[1].vlines(real_r_DAS, 0, 30, linewidth=3, color='red')
+    ax[1].vlines(r_dyn_dyn, 0, 30, linewidth=3, color='black')
+    ax[1].set_xlabel("Correlation between DAS")
+    ax[1].set_title(f"p-value={round(p_value_das,3)}")
+    plt.savefig(f"../RESULTS/figures/functional/{session}/global-analysis_{session}_permutations-TRs."+fig_fmt, dpi=1000)
+    plt.close()
+
+    # To further clarify, we explicitly quantify the effects of the DAS and the TR on the network similarity measure
+    from statsmodels.regression.linear_model import OLS
+    import statsmodels.api as sm
+    print("PCC -> a*DAS + b*TR + intercept")
+    XX = np.array([mean_dynamic_change, TRs]).T
+    XX = sm.add_constant(XX)
+    LR_full = OLS(mean_pcc_sim, XX).fit()
+    print(LR_full.summary())
+    print("-------------")
+    print("PCC -> a*DAS + intercept")
+    XX = mean_dynamic_change.T
+    XX = sm.add_constant(XX)
+    LR = OLS(mean_pcc_sim, XX).fit()
+    print(LR.summary())

@@ -29,9 +29,17 @@ if __name__ == '__main__':
     ###################################
     ### Get files in an ordered way ###
     ###################################
-    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files("../Data/functional/images/", sessions='*', subject="CON")
-    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files("../Data/functional/images/", sessions='*', subject="PAT", exclude='*lesion*')
-    
+    # Subjects with shorter TR (i.e., 2.1 sec)
+    CON_ShortTR = [] #["sub-CON01","sub-CON02","sub-CON03","sub-CON04"]
+    PAT_ShortTR = [] #["sub-PAT01","sub-PAT02","sub-PAT03","sub-PAT05","sub-PAT06","sub-PAT07","sub-PAT08"]
+    # Gather files with appropriate exclusions if applicable
+    (CONTROL_paired, C_subjects_paired), (CONTROL_unpaired, C_subjects_unpaired) = prepare_functional_files(
+        "../Data/functional/images/", sessions='*', subject="CON", ommit_IDs=CON_ShortTR
+    )
+    (PATIENT_paired, P_subjects_paired), (PATIENT_unpaired, P_subjects_unpaired) = prepare_functional_files(
+        "../Data/functional/images/", sessions='*', subject="PAT", exclude='*lesion*', ommit_IDs=PAT_ShortTR
+    )
+
     ######################
     ### Tumor Features ###
     ######################
@@ -45,12 +53,14 @@ if __name__ == '__main__':
     tumor_locs = np.array([1 if 'Frontal' in dict(info["tumor location"])[k] else 2 for k in P_subjects_paired])
     tumor_grade = np.array([2 if 'II' in dict(info["tumor type & grade"])[k] else 1 for k in P_subjects_paired])
     tumor_ventricles = np.array([2 if 'yes' in dict(info["ventricles"])[k] else 1 for k in P_subjects_paired])
+    TR_paired = np.array([dict(info["Pre-surgery TR"])[k] for k in P_subjects_paired])
     tumor_sizes_unpaired = np.array([dict(info["tumor size (cub cm)"])[k] for k in P_subjects_unpaired])
     tumor_types_unpaired = np.array([1 if 'ningioma' in dict(info["tumor type & grade"])[k] else 2 for k in P_subjects_unpaired])
     tumor_locs_unpaired = np.array([1 if 'Frontal' in dict(info["tumor location"])[k] else 2 for k in P_subjects_unpaired])
     tumor_grade_unpaired = np.array([2 if 'II' in dict(info["tumor type & grade"])[k] else 1 for k in P_subjects_unpaired])
     tumor_ventricles_unpaired = np.array([2 if 'yes' in dict(info["ventricles"])[k] else 1 for k in P_subjects_unpaired])
-
+    TR_unpaired = np.array([dict(info["Pre-surgery TR"])[k] for k in P_subjects_unpaired])
+    
     ################
     ### Analysis ###
     ################
@@ -347,7 +357,9 @@ if __name__ == '__main__':
         np.concatenate((tumor_sizes,tumor_sizes_unpaired)), 
         np.concatenate((tumor_ventricles,tumor_ventricles_unpaired)),
         np.concatenate((tumor_locs,tumor_locs_unpaired)),
-        np.concatenate((tumor_grade,tumor_grade_unpaired)), fig_fmt="svg", tissue=tissue_label
+        np.concatenate((tumor_grade,tumor_grade_unpaired)), 
+        np.concatenate((TR_paired,TR_unpaired)), 
+        fig_fmt="svg", tissue=tissue_label
     )
 
     """ ############################
