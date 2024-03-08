@@ -312,7 +312,7 @@ if __name__ == '__main__':
         ###############
         from utils.figures import *
 
-        # 1) Box plot for z-scores of the 19 folds
+        """ # 1) Box plot for z-scores of the 19 folds
         boxplot(figs_path, args, mse, mse_z, mae_z, pcc_z, cs_z, kl_z, js_z, PAT_subjects)
         # 2) Normality plot for all metrics
         normality_plots(figs_path, mse_z, mae_z, pcc_z, cs_z, kl_z, js_z, args, PAT_subjects)
@@ -329,7 +329,7 @@ if __name__ == '__main__':
         logging.info(" MAE-PCC: r = " + str(correlations[3]))
         logging.info(" MAE-CS: r = " + str(correlations[4]))
         logging.info(" PCC-CS: r = " + str(correlations[5]))
-        logging.info(" =====================================")
+        logging.info(" =====================================") """
 
         # 3) Checking for the effect of tumor size
         size_correlation(figs_path, args, mae, pcc, tumor_sizes, PAT_subjects)
@@ -347,58 +347,4 @@ if __name__ == '__main__':
         grade_effects(figs_path, args, mae, pcc, tumor_grade, PAT_subjects)
 
         # 7) Degree distributions
-        plot_degree_distribution(figs_path, args, folder+args.model+'_degree_distribution.tsv')
-
-    # TODO: 
-    # 1 - Check Grubb's test - OK
-    # 2 - T-test on permutation of the folds - OK
-    # 3 - Wilcoxon Signed Rank test on permutation of the folds - OK
-    # 4 - Do these two/three figures
-    # 5 - Degree distribution + KD/JS divergenge - OK
-    # 6 - Think figures for 5
-    # 7 - Meningioma vs glioma reconstruction
-    # 8 - Null prediction models
-    # 9 - Testing agains null models
-
-    # To average the models #
-    # https://discuss.pytorch.org/t/average-each-weight-of-two-models/77008
-
-    # Saving Predicted Outputs
-    # REMEMBER TO ADD THE PREVIOUSLY DELETED ROIS IF YOU WANT TO COMPARE WITH ATLAS
-    """ 
-    print("================")
-    print("Saving Outputs ...")
-    graph_dumper(graph_path, preds, PAT_subjects, suffix='preds')
-    graph_files = get_subjects(folder, session='csv')
-    for f in graph_files:
-        _, _, _, name = get_info(f)
-        sg = GraphFromCSV(f, name, png_path)
-        sg.unflatten_graph(to_default=True, save_flat=True)
-        sg.process_graph(log=False, reshuffle=True)
-        Path(png_path+name+'_flatCM.csv').rename(flat_path+name+'_flatCM.csv')
-
-    print("================")
-    print("Computing Error Metrics ...")
-    # Compute metrics to asses the reliability of the generated graphs
-    mse, edge_mse = euclidean_distance(preds, data[1])
-    graph_dumper(metrics_csv_path, mse, ["Graphs_Error"], suffix='Mean')
-    graph_dumper(metrics_csv_path, edge_mse, PAT_subjects, suffix='Edge_Distance')
-    edge_avg, edge_std = plot_distances((mse, edge_mse), metrics_fig_path, PAT_subjects)
-    graph_dumper(metrics_csv_path, torch.stack((edge_avg, edge_std), dim=0), ["Edge_Error", "Edge_Std"], suffix='avg')
-    sg = GraphFromCSV(metrics_csv_path+"Edge_Error_avg.csv", "Edge_Error_avg", metrics_fig_path)
-    sg.unflatten_graph(to_default=True, save_flat=False)
-    sg.process_graph(log=False, reshuffle=True, bar_label='Distance')
-    sg = GraphFromCSV(metrics_csv_path+"Edge_Std_avg.csv", "Edge_Std_avg", metrics_fig_path)
-    sg.unflatten_graph(to_default=True, save_flat=False)
-    sg.process_graph(log=False, reshuffle=True, bar_label='Standard Deviation')
-    error_files = get_subjects(folder+'metrics/', session='numerical', subject_ID="sub")
-    for f in error_files:
-        _, _, _, name = get_info(f)
-        sg = GraphFromCSV(f, name, metrics_fig_path)
-        sg.unflatten_graph(to_default=True, save_flat=False)
-        sg.process_graph(log=False, reshuffle=True, bar_label='Distance')
-    print("=====Logs=======")
-    print("Mean Absolut Error of the Regression:", torch.mean(mse))
-    print("Mean STD of the Absolut Error:", torch.std(mse))
-    """
-    
+        plot_degree_distribution(figs_path, args, folder+args.model+'_degree_distribution.tsv')  
