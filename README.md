@@ -1,11 +1,11 @@
 # Structural-Functional-Rearrangement
 Repository for the codes used in the study of structural and functional networks in brain tumors and surgery. 
 
-Research conducted by Joan Falcó-Roget, Fabio Sambataro, Alberto Cacciola and Alessandro Crimi [1]. 
+Research conducted by Joan Falcó-Roget, Fabio Sambataro, Alberto Cacciola and Alessandro Crimi [1,2]. Original raw data without nodule segmentation [3].
 
-If you use this code or data please consider citing:
+If you use this code or data please consider citing the following works:
 
-[1] Falcó-Roget, J., et al. Functional and Structural Reorganization in Brain Tumors: A Machine Learning Approach Using Desynchronized Functional Oscillations. Communications Biology, 2024 (Accepted)
+[1] Falcó-Roget, J., et al. Functional and Structural Reorganization in Brain Tumors: A Machine Learning Approach Using Desynchronized Functional Oscillations. Communications Biology, 2024. DOI: https://doi.org/10.1038/s42003-024-06119-3
 
 [2] Falcó-Roget, J., Crimi, A. Bayesian Filtered Generation of Post-surgical Brain Connectomes on Tumor Patients. Imaging Systems for GI Endoscopy, and Graphs in Biomedical Image Analysis, 2022. DOI: https://doi.org/10.1007/978-3-031-21083-9_8
 
